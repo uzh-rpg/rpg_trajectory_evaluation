@@ -113,7 +113,7 @@ def alignTrajectory(p_es, p_gt, q_es, q_gt, method, n_aligned=-1):
     '''
     calculate s, R, t so that:
         gt = R * s * est + t
-    method can be: sim3, se3, posyaw;
+    method can be: sim3, se3, posyaw, none;
     n_aligned: -1 means using all the frames
     '''
     assert p_es.shape[1] == 3
@@ -131,6 +131,9 @@ def alignTrajectory(p_es, p_gt, q_es, q_gt, method, n_aligned=-1):
         R, t = alignSE3(p_es, p_gt, q_es, q_gt, n_aligned)
     elif method == 'posyaw':
         R, t = alignPositionYaw(p_es, p_gt, q_es, q_gt, n_aligned)
+    elif method == 'none':
+        R = np.identity(3)
+        t = np.zeros((3, ))
     else:
         assert False, 'unknown alignment method'
 
