@@ -15,7 +15,7 @@ If you use this code in an academic context, please cite the following paper:
 Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry, IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018.
 
 ```
-@InProceedings{Zhang18iros
+@InProceedings{Zhang18iros,
   author = {Zhang, Zichao and Scaramuzza, Davide},
   title = {A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry},
   booktitle = {IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS)},
