@@ -271,3 +271,5 @@ With the interface, it should be easy to access all the computed errors for cust
 ## Credits
 See `package.yaml` for the list of authors that have contributed to this toolbox.
 
+It might happen that some open-source code is incorporated into the toolbox but we missed the license/copyright information.
+If you recognize such a situation, please open an issue.
