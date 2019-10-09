@@ -91,10 +91,14 @@ class MulTrajError(object):
         for et in self.kAbsMetrics:
             self.abs_errors[et+'_stats'] = rw.compute_statistics(
                 np.array(self.abs_errors[et]))
+        self.overall_rel_errors = {}
         for et in kRelMetrics:
+            values = []
             for d in self.rel_errors:
                 self.rel_errors[d][et+'_stats'] = rw.compute_statistics(
                     self.rel_errors[d][et])
+                values.extend(self.rel_errors[d][et].tolist())
+            self.overall_rel_errors[et] = rw.compute_statistics(values)
 
     def saveErrors(self):
         if self.n_traj == 0:
@@ -116,6 +120,11 @@ class MulTrajError(object):
                 self.save_results_dir, 'mt_rel_err_'+dist_str + '.yaml')
             for et, label in zip(kRelMetrics, kRelMetricLables):
                 rw.update_and_save_stats(cur_err[et+'_stats'], label, dist_fn)
+
+        overall_rel_fn = os.path.join(
+            self.save_results_dir, 'mt_rel_err_overall' + '.yaml')
+        for et, label in zip(kRelMetrics, kRelMetricLables):
+            rw.update_and_save_stats(self.overall_rel_errors[et], label, overall_rel_fn)
 
         np.savetxt(
                 os.path.join(
