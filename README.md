@@ -221,8 +221,8 @@ The tables can be readily used in `Latex` files.
 
 Several example plots (from `analyze_trajectories_config/euroc_vislam_mono.yaml`) comparing the performance of different algorithms are
 
-![overall_top_traj_v203](./doc/V203_trajectory_top.png)
-![overall_rel_err_v203](./doc/V203_translation_error.png)
+![overall_top_traj_mh03](./doc/MH_03_trajectory_top.png)
+![overall_rel_err_mh03](./doc/MH_03_trans_yaw_error.png)
 
 #### Parameters
 Configuration: `config` configuration file under `scripts/analyze_trajectories_config`
