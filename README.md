@@ -187,6 +187,8 @@ Algorithms:
   vio_stereo: 
     fn: traj_est
     label: vio_stereo
+RelDistances: []    ---> list of distances that will be used for calculating relative errors
+                         empty list means the distances will be computed from trajectory lengths
 ```
 
 will analyze the following folders
@@ -207,6 +209,9 @@ will analyze the following folders
     ├── laptop_vio_stereo_V2_02
     └── laptop_vio_stereo_V2_03
 ```
+
+Note that if a set of consistent sub-trajectory lengths is desired (e.g., KITTI style analysis)
+one should set the `RelDistances` in the evaluation configuration.
 
 #### Output
 The evaluation process will generate the `saved_results` folder in each result folder,

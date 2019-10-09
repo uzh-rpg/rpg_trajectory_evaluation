@@ -18,3 +18,4 @@ Algorithms:
   vio_stereo: 
     fn: traj_est
     label: viostereo
+RelDistances: []

@@ -28,3 +28,4 @@ Algorithms:
   vislam_ba: 
     fn: ba_estimate
     label: vislam-ba
+RelDistances: []

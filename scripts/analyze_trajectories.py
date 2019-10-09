@@ -260,8 +260,12 @@ def parse_config_file(config_fn):
     for v in algorithms:
         alg_labels[v] = d['Algorithms'][v]['label']
         alg_fn[v] = d['Algorithms'][v]['fn']
+    
+    boxplot_distances = []
+    if 'RelDistances' in d:
+        boxplot_distances = d['RelDistances']
 
-    return datasets, datasets_labels, algorithms, alg_labels, alg_fn
+    return datasets, datasets_labels, algorithms, alg_labels, alg_fn, boxplot_distances
 
 
 if __name__ == '__main__':
@@ -318,7 +322,7 @@ if __name__ == '__main__':
 
     print("Parsing evaluation configuration {0}...".format(config_fn))
 
-    datasets, datasets_labels, algorithms, algo_labels, algo_fn = \
+    datasets, datasets_labels, algorithms, algo_labels, algo_fn, rel_e_distances = \
         parse_config_file(config_fn)
     assert len(PALLETE) > len(algorithms),\
         "Not enough colors for all configurations"
@@ -362,7 +366,7 @@ if __name__ == '__main__':
     config_multierror_list = []
     dataset_boxdist_map = {}
     for d in datasets:
-        dataset_boxdist_map[d] = []
+        dataset_boxdist_map[d] = rel_e_distances
     for config_i in algorithms:
         cur_trajectories_i = []
         cur_mulierror_i = []
