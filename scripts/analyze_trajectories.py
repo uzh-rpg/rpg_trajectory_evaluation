@@ -432,7 +432,7 @@ if __name__ == '__main__':
                          eval_uid+'.txt'))
 
     if args.rmse_boxplot and n_trials > 1:
-        rmse_plot_alg = [v for v in algorithms if v.startswith('svo')]
+        rmse_plot_alg = [v for v in algorithms]
         algorithm_rmse = collect_rmse_per_dataset(config_multierror_list,
                                                   rmse_plot_alg)
         print("--- Generate boxplot for RMSE ---")
