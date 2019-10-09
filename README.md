@@ -49,6 +49,7 @@ Each folder needs to contain at least two text files specifying the groundtruth 
 * `stamped_groundtruth.txt`: groundtruth poses with timestamps
 * `stamped_traj_estimate.txt`: estimated poses with timestamps
 * (optional) `eval_cfg.yaml`: specify evaluation parameters
+* (optional) `start_end_time.yaml`: specify the start and end time (in seconds) for analysis.
 
 
 For analyzing results from `N` runs, the estimated poses should have suffixes `0` to `N-1`.
@@ -80,6 +81,11 @@ Currently `eval_cfg.yaml` specifies two parameters for trajectory alignment (use
 * `align_num_frames`: the number of poses (starting from the beginning) that will be used in the trajectory alignment. `-1` means all poses will be used.
 
 **If this file does not exist, trajectory alignment will be done using `sim3` and all the poses.**
+
+`start_end_time.yaml` can specify the following (according to groundtruth time):
+* `start_time_sec`: only poses after this time will be used for analysis
+* `end_time_sec`: only poses before this time will be used for analysis
+
 
 ## Run the Evaluation
 We can run the evaluation on a single estimate result or for multiple algorithms and datasets.

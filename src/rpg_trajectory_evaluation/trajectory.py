@@ -74,6 +74,20 @@ class Trajectory:
                 self.align_num_frames = eval_cfg['align_num_frames']
         self.align_str = self.align_type + '_' + str(self.align_num_frames)
 
+        self.start_end_time_fn = os.path.join(self.data_dir, 'start_end_time.yaml')
+        self.start_time_sec = -float('inf')
+        self.end_time_sec = float('inf')
+        if os.path.exists(self.start_end_time_fn):
+            print("Find start end time for evaluation.")
+            with open(self.start_end_time_fn, 'r') as f:
+                d = yaml.load(f)
+                if 'start_time_sec' in d:
+                    self.start_time_sec = d['start_time_sec']
+                if 'end_time_sec' in d:
+                    self.end_time_sec = d['end_time_sec']
+                print("Will analyze trajectory ranging from {} to {}.".format(
+                    self.start_time_sec, self.end_time_sec))
+
         self.abs_errors = {}
 
         # we cache relative error since it is time-comsuming to compute
@@ -113,9 +127,12 @@ class Trajectory:
             traj_loading.load_stamped_dataset(
                 self.data_dir, nm_gt, nm_est,
                 os.path.join(Trajectory.saved_res_dir_nm, self.est_type,
-                             nm_matches))
+                             nm_matches),
+                start_t_sec=self.start_time_sec, end_t_sec=self.end_time_sec)
         self.t_gt_raw, self.p_gt_raw, self.q_gt_raw =\
-            traj_loading.load_raw_groundtruth(self.data_dir, nm_gt)
+            traj_loading.load_raw_groundtruth(self.data_dir, nm_gt,
+                                              start_t_sec=self.start_time_sec,
+                                              end_t_sec=self.end_time_sec)
         if self.p_es.size == 0:
             print(Fore.RED+"Empty estimate file.")
             return False
