@@ -50,8 +50,10 @@ Each folder needs to contain at least two text files specifying the groundtruth 
 * `stamped_traj_estimate.txt`: estimated poses with timestamps
 * (optional) `eval_cfg.yaml`: specify evaluation parameters
 
+
+For analyzing results from `N` runs, the estimated poses should have suffixes `0` to `N-1`.
 You can see the folders under `results` for examples.
-These three files contains **all the essential information** to reproduce quantitative trajectory evaluation results with the toolbox.
+These files contains **all the essential information** to reproduce quantitative trajectory evaluation results with the toolbox.
 
 #### Poses
 The groundtruth and estimated poses are specified in the following format
@@ -120,12 +122,12 @@ Several example plots showing the trajectory, absolute trajectory error and rela
 * `--mul_trials`: will analyze `n` runs. In the case of `n > 1`, the estimate files should end with a number suffix (e.g., `stamped_traj_estimate0.txt`). Default: `None`
 
 #### Advanced: Different estimation type
-Sometimes, a SLAM algorithm outputs different types of trajectories, such as real-time poses and optimized keyframe poses (e.g., pose graph). By specifying the estimation type (at the end of the command line), you can ask the script to analyze different files, for example
+Sometimes, a SLAM algorithm outputs different types of trajectories, such as real-time poses and optimized keyframe poses (e.g., pose graph, bundle adjustment). By specifying the estimation type (at the end of the command line), you can ask the script to analyze different files, for example
 * `--est_type traj_est`: analyze `stamped_traj_estimate.txt`
 * `--est_type pose_graph`: analyze `stamped_pose_graph_estimate.txt`
 * `--est_type traj_est pose_graph`: analyze both. In this case you can find the results in corresponding sub-directories in `saved_results` and `plots`.
 
-The mapping from the `est_type` to file names is defined in `scripts/fn_constants.py`. This is also used for analyzing multiple trajectories.
+The mapping from the `est_type` to file names (i.e., `stamped_*.txt`) is defined in `scripts/fn_constants.py`. This is also used for analyzing multiple trajectories. You can find an example in `results/euroc_vislam_mono` for comparing real-time poses and bundle adjustment estimates.
 
 ### Multiple trajectory estimates
 
@@ -133,13 +135,13 @@ For ROS, run
 
 ```
 rosrun rpg_trajectory_evaluation analyze_trajectories.py \
-  euroc_vo.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
+  euroc_vislam_mono.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 otherwise, run
 
 ```
 python2 analyze_trajectories.py \
-  euroc_vo.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
+  euroc_vislam_mono.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 
 These commands will look for `<platform>` folder under `results_dir` and analyze the algorithms and datasets combinations specified in `analyze_trajectories.py`, as described below.
@@ -162,7 +164,7 @@ The datasets under `results` are organized as
 
 Each sub-folder is of the same format as mentioned above.
 You need to specify the algorithms and datasets to analyze for the script `analyze_trajectories.py`.
-We use a configuration file under `scripts/analyze_trajectories_config` to sepcify the details. For example
+We use a configuration file under `scripts/analyze_trajectories_config` to sepcify the details. For example, in `euroc_vio_mono_stereo`
 
 ```
 Datasets:
@@ -217,7 +219,7 @@ In addition, it will generate plots and text files under `results` folder compar
 
 The tables can be readily used in `Latex` files.
 
-Several example plots comparing the performance of different algorithms are
+Several example plots (from `analyze_trajectories_config/euroc_vislam_mono.yaml`) comparing the performance of different algorithms are
 
 ![overall_top_traj_v203](./doc/V203_trajectory_top.png)
 ![overall_rel_err_v203](./doc/V203_translation_error.png)
