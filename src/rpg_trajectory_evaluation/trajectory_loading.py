@@ -2,28 +2,34 @@
 
 import os
 import numpy as np
-import trajectory_utils
+from colorama import init, Fore
 
+import trajectory_utils
 import associate_timestamps as associ
 
+init(autoreset=True)
 
-def load_stamped_dataset(results_dir, max_diff=0.02):
-    '''
-    read synchronized estimation and groundtruth and associate the timestamps
-    '''
-    print('loading dataset in '+results_dir)   
 
-    fn_es = os.path.join(results_dir, 'stamped_traj_estimate.txt')
-    fn_gt = os.path.join(results_dir, 'stamped_groundtruth.txt')
-    fn_matches = os.path.join(results_dir, 'stamped_est_gt_matches.txt')
+def load_estimate_and_associate(fn_gt, 
+                                fn_es, fn_matches, data_gt=None,
+                                max_diff=0.02):
+    matches = np.array([])
+    if os.path.exists(fn_matches):
+        matches = np.loadtxt(fn_matches, dtype=int)
+    if matches.size > 0:
+        print(Fore.YELLOW +
+              "Loaded exsiting matching results {0}.".format(fn_matches))
+    else:
+        matches = associ.read_files_and_associate(fn_es, fn_gt, 0.0, max_diff)
+        np.savetxt(fn_matches, np.array(matches, dtype=int), fmt='%d')
+        print(Fore.YELLOW +
+              "Saved matching results to {0}.".format(fn_matches))
 
-    matches = associ.read_files_and_associate(fn_es, fn_gt, 0.0, max_diff)
     dict_matches = dict(matches)
-    np.savetxt(fn_matches, np.array(matches, dtype=int), fmt='%d')
 
     data_es = np.loadtxt(fn_es)
-    data_gt = np.loadtxt(fn_gt)
-
+    if data_gt is None:
+        data_gt = np.loadtxt(fn_gt)
     p_es = []
     p_gt = []
     q_es = []
@@ -44,3 +50,40 @@ def load_stamped_dataset(results_dir, max_diff=0.02):
     t_gt = np.array(t_gt)
 
     return t_gt, p_es, q_es, t_gt, p_gt, q_gt
+
+
+def load_stamped_dataset(results_dir,
+                         nm_gt='stamped_groundtruth.txt',
+                         nm_est='stamped_traj_estimate.txt',
+                         nm_matches='stamped_est_gt_matches.txt',
+                         max_diff=0.02):
+    '''
+    read synchronized estimation and groundtruth and associate the timestamps
+    '''
+    fn_gt = os.path.join(results_dir, nm_gt)
+    data_gt = np.loadtxt(fn_gt)
+
+    fn_es = os.path.join(results_dir, nm_est)
+    fn_matches = os.path.join(results_dir, nm_matches)
+
+    return load_estimate_and_associate(
+        fn_gt, fn_es, fn_matches, data_gt, max_diff)
+
+
+def load_raw_groundtruth(results_dir, nm_gt ='stamped_groundtruth.txt'):
+    fn_gt = os.path.join(results_dir, nm_gt)
+    data_gt = np.loadtxt(fn_gt)
+    t_gt = []
+    p_gt = []
+    q_gt = []
+    for d in data_gt:
+        t_gt.append(d[0])    
+        p_gt.append(d[1:4])
+        q_gt.append(d[4:8])
+    t_gt = np.array(t_gt)
+    p_gt = np.array(p_gt)
+    q_gt = np.array(q_gt)
+
+    return t_gt, p_gt, q_gt
+
+

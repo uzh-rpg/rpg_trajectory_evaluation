@@ -2,109 +2,79 @@
 
 import os
 import argparse
+import yaml
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
+from colorama import init, Fore
 
 import add_path
 from trajectory import Trajectory
 import plot_utils as pu
 import results_writer as res_writer
+from analyze_trajectory_single import analyze_multiple_trials
+from fn_constants import kNsToEstFnMapping, kNsToMatchFnMapping, kFnExt
+
+init(autoreset=True)
 
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})
 rc('text', usetex=True)
 
 FORMAT = '.pdf'
 
-ALGORITHM_CONFIGS = ['vio_mono', 'vio_stereo']
-
-# These are the labels that will be displayed for items in ALGORITHM_CONFIGS
-PLOT_LABELS = {'vio_mono': 'vio mono',
-               'vio_stereo': 'vio stereo'}
-
-# assgin colors to different configurations
-# make use you have more colors in the pallete!
-pallete = ['b', 'g', 'r', 'c', 'k', 'y', 'm']
-assert len(pallete) > len(
-    ALGORITHM_CONFIGS), "Not enough colors for all configurations"
-COLORS = {}
-for i in range(len(ALGORITHM_CONFIGS)):
-    COLORS[ALGORITHM_CONFIGS[i]] = pallete[i]
-
-# DATASETS = ['MH_01', 'MH_02', 'MH_03', 'MH_04', 'MH_05', 'V1_01',
-            # 'V1_02', 'V1_03', 'V2_01', 'V2_02', 'V2_03']
-DATASETS = ['MH_01', 'MH_03', 'MH_05', 'V2_01', 'V2_02', 'V2_03']
-
-# The maximum lenght will be used to calculate the relative error.
-# otherwise it is calculated from the groundtruth
-MAX_TRAJ_LENGTHS = {'MH_01': 80.6,
-                    'MH_02': 73.4,
-                    'MH_03': 130.9,
-                    'MH_04': 91.7,
-                    'MH_05': 97.5,
-                    'V1_01': 58.5,
-                    'V1_02': 75.8,
-                    'V1_03': 78.9,
-                    'V2_01': 36.4,
-                    'V2_02': 83.2,
-                    'V2_03': 86.1}
-# boxplot distances that will be used for all datasets for overall errors
-OVERALL_BOXPLOT_DISTANCES = [7.0, 14.0, 21.0, 28.0, 35.0]
+PALLETE = ['b', 'g', 'r', 'c', 'k', 'y', 'm']
 
 
-def compute_odometry_error_per_dataset(dataset_trajectories_dict,
+def collect_odometry_error_per_dataset(dataset_multierror_list,
                                        dataset_names):
     dataset_rel_err = []
-    print("\n>>> Calcuating relative error (KITTI style)...")
+    print("\n>>> Collecting relative error (KITTI style)...")
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         print("> Processing {0} for all configurations...".format(
             dataset_nm))
-        dataset_trajs = dataset_trajectories_dict[dataset_idx]
+        dataset_mt_error = dataset_multierror_list[dataset_idx]
+        print("> Found {0} configurations.".format(len(dataset_mt_error)))
+        for d in dataset_mt_error:
+            print('  - {0}: {1}'.format(d.alg, d.uid))
 
         cur_res = {'trans_err': {}, 'trans_err_perc': {},
                    'ang_yaw_err': {}, 'subtraj_len': []}
 
-        traj_length = 0
-        if(dataset_nm in MAX_TRAJ_LENGTHS):
-            traj_length = MAX_TRAJ_LENGTHS[dataset_nm]
-        else:
-            for x in dataset_trajs:
-                traj_length = max([x.traj_length, traj_length])
-        print('Max trajectory length of all configurations: '+str(traj_length))
-        distances = [np.floor(x*traj_length)
-                     for x in [0.1, 0.2, 0.3, 0.4, 0.5]]
-        cur_res['subtraj_len'] = distances
-        print("Using distances {0} for relative error.".format(distances))
+        cur_res['subtraj_len'] = dataset_mt_error[0].rel_distances
+        for d in dataset_mt_error:
+            assert cur_res['subtraj_len'] == d.rel_distances,\
+                "inconsistent boxplot distances"
+        print("Using distances {0} for relative error.".format(
+            cur_res['subtraj_len']))
 
-        for traj in dataset_trajs:
-            cur_res['trans_err'][traj.alg] = []
-            cur_res['trans_err_perc'][traj.alg] = []
-            cur_res['ang_yaw_err'][traj.alg] = []
+        print("Processing each configurations...")
+        for mt_error in dataset_mt_error:
+            cur_alg = mt_error.alg
+            print('  - {0}'.format(cur_alg))
+            cur_res['trans_err'][cur_alg] = []
+            cur_res['trans_err_perc'][cur_alg] = []
+            cur_res['ang_yaw_err'][cur_alg] = []
 
-            print('Platform: '+traj.platform+' Alg: ' +
-                  traj.alg+' Dataset: '+traj.dataset_short_name)
-
-            for dist in distances:
-                traj.compute_relative_error_at_subtraj_len(dist)
-
-                cur_res['trans_err'][traj.alg].append(
-                    traj.rel_errors[dist]['rel_trans'])
-                cur_res['trans_err_perc'][traj.alg].append(
-                    traj.rel_errors[dist]['rel_trans_perc'])
-                cur_res['ang_yaw_err'][traj.alg].append(
-                    traj.rel_errors[dist]['rel_yaw'])
+            for dist in cur_res['subtraj_len']:
+                cur_res['trans_err'][cur_alg].append(
+                    mt_error.rel_errors[dist]['rel_trans'])
+                cur_res['trans_err_perc'][cur_alg].append(
+                    mt_error.rel_errors[dist]['rel_trans_perc'])
+                cur_res['ang_yaw_err'][cur_alg].append(
+                    mt_error.rel_errors[dist]['rel_yaw'])
 
         dataset_rel_err.append(cur_res)
         print("< Finish processing {0} for all configurations.".format(
             dataset_nm))
 
-    print("<<< ...finish computing relative error.\n")
+    print("<<< ...finish collecting relative error.\n")
 
     return dataset_rel_err
 
 
-def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir):
+def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir,
+                                    plot_settings):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         print("Plotting {0}...".format(dataset_nm))
         rel_err = dataset_rel_err[dataset_idx]
@@ -113,22 +83,26 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir):
         config_labels = []
         config_colors = []
         for v in rel_err['trans_err'].keys():
-            config_labels.append(PLOT_LABELS[v])
-            config_colors.append(COLORS[v])
+            config_labels.append(plot_settings['algo_labels'][v])
+            config_colors.append(plot_settings['algo_colors'][v])
 
-        fig = plt.figure(figsize=(6, 2.5))
+        fig = plt.figure(figsize=(12, 3))
         ax = fig.add_subplot(
-            111, xlabel='Distance traveled [m]',
+            121, xlabel='Distance traveled [m]',
             ylabel='Translation error [m]')
         pu.boxplot_compare(ax, distances, rel_err['trans_err'].values(),
-                           config_labels, config_colors)
+                           config_labels, config_colors, legend=False)
+        ax = fig.add_subplot(
+            122, xlabel='Distance traveled [m]', ylabel='Yaw error [deg]')
+        pu.boxplot_compare(ax, distances, rel_err['ang_yaw_err'].values(),
+                           config_labels, config_colors, legend=True)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
-                    '_translation_error'+FORMAT, bbox_inches="tight")
+                    '_trans_yaw_error'+FORMAT, bbox_inches="tight")
         plt.close(fig)
 
         # relative error
-        fig = plt.figure(figsize=(6, 2.5))
+        fig = plt.figure(figsize=(6, 3))
         ax = fig.add_subplot(
             111, xlabel='Distance traveled [m]',
             ylabel='Translation error [\%]')
@@ -140,25 +114,77 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir):
                     bbox_inches="tight")
         plt.close(fig)
 
-        # yaw orientation error
-        fig = plt.figure(figsize=(6, 2.5))
-        ax = fig.add_subplot(
-            111, xlabel='Distance traveled [m]', ylabel='Yaw error [deg]')
-        pu.boxplot_compare(ax, distances, rel_err['ang_yaw_err'].values(),
-                           config_labels, config_colors)
-        fig.tight_layout()
-        fig.savefig(output_dir+'/'+dataset_nm +
-                    '_yaw_error'+FORMAT, bbox_inches="tight")
-        plt.close(fig)
+
+def collect_rmse_per_dataset(config_multierror_list,
+                             algorithms):
+    algorithm_rmse = {'trans_err': {}, 'rot_err': {}}
+    print("\n>>> Collecting RMSE per dataset...")
+    for idx, alg_i in enumerate(algorithms):
+        config_mt_error = config_multierror_list[idx]
+        algorithm_rmse['trans_err'][alg_i] = []
+        algorithm_rmse['rot_err'][alg_i] = []
+        for mt_error in config_mt_error:
+            algorithm_rmse['trans_err'][alg_i].append(
+                mt_error.abs_errors['rmse_trans'])
+            algorithm_rmse['rot_err'][alg_i].append(
+                mt_error.abs_errors['rmse_rot'])
+
+    return algorithm_rmse
 
 
-def plot_trajectories(dataset_trajectories_dict, dataset_names, output_dir):
+def plot_rmse_per_dataset(algorithm_rmse, dataset_names, out_dir,
+                          plot_settings):
+    config_labels = []
+    config_colors = []
+    target_algs = algorithm_rmse['trans_err'].keys()
+    for v in target_algs:
+        config_labels.append(plot_settings['algo_labels'][v])
+        config_colors.append(plot_settings['algo_colors'][v])
+    assert target_algs == algorithm_rmse['rot_err'].keys()
+    assert len(datasets_labels) == len(datasets)
+    labels = [plot_settings['datasets_labels'][v] for v in dataset_names]
+
+    # check
+    n_data = len(datasets)
+    for v in target_algs:
+        assert len(algorithm_rmse['trans_err'][v]) == n_data
+        assert len(algorithm_rmse['rot_err'][v]) == n_data
+
+    fig = plt.figure(figsize=(6, 3))
+    ax = fig.add_subplot(
+        111, xlabel='Datasets',
+        ylabel='Translation RMSE (m)')
+    pu.boxplot_compare(ax, labels,
+                       algorithm_rmse['trans_err'].values(),
+                       config_labels, config_colors)
+    fig.tight_layout()
+    fig.savefig(output_dir+'/' +
+                'all_translation_rmse'+FORMAT, bbox_inches="tight")
+    plt.close(fig)
+
+    fig = plt.figure(figsize=(6, 3))
+    ax = fig.add_subplot(
+        111, xlabel='Datasets',
+        ylabel='Rotation RMSE (deg)')
+    pu.boxplot_compare(ax, labels, algorithm_rmse['rot_err'].values(),
+                       config_labels, config_colors)
+    fig.tight_layout()
+    fig.savefig(output_dir+'/' +
+                'all_rotation_rmse'+FORMAT, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
+                      plot_settings, plot_idx=0):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
-        dataset_trajs = dataset_trajectories_dict[dataset_idx]
+        dataset_trajs = dataset_trajectories_list[dataset_idx]
         p_es_0 = {}
-        p_gt_0 = dataset_trajs[0].p_gt
-        for traj in dataset_trajs:
-            p_es_0[traj.alg] = traj.p_es_aligned
+        p_gt_raw = (dataset_trajs[0])[plot_idx].p_gt_raw
+        p_gt_0 = {}
+        for traj_list in dataset_trajs:
+            p_es_0[traj_list[plot_idx].alg] = traj_list[plot_idx].p_es_aligned
+            p_gt_0[traj_list[plot_idx].alg] = traj_list[plot_idx].p_gt
+        print("Collected trajectories to plot: {0}".format(p_es_0.keys()))
 
         print("Plotting {0}...".format(dataset_nm))
 
@@ -167,9 +193,22 @@ def plot_trajectories(dataset_trajectories_dict, dataset_names, output_dir):
         ax = fig.add_subplot(111, aspect='equal',
                              xlabel='x [m]', ylabel='y [m]')
         for alg in p_es_0:
-            pu.plot_trajectory_top(ax, p_es_0[alg], COLORS[alg],
-                                   PLOT_LABELS[alg])
-        pu.plot_trajectory_top(ax, p_gt_0, 'm', 'Groundtruth')
+            fig_i = plt.figure(figsize=(6, 5.5))
+            ax_i = fig_i.add_subplot(111, aspect='equal',
+                                     xlabel='x [m]', ylabel='y [m]')
+            pu.plot_trajectory_top(ax_i, p_es_0[alg], 'b', 'Estimate', 0.5)
+            pu.plot_trajectory_top(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
+            pu.plot_aligned_top(ax_i, p_es_0[alg], p_gt_0[alg], -1)
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            fig_i.tight_layout()
+            fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_top_' +
+                          alg + FORMAT, bbox_inches="tight")
+
+            pu.plot_trajectory_top(ax, p_es_0[alg],
+                                   plot_settings['algo_colors'][alg],
+                                   plot_settings['algo_labels'][alg])
+        plt.sca(ax)
+        pu.plot_trajectory_top(ax, p_gt_raw, 'm', 'Groundtruth')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + dataset_nm +
@@ -181,9 +220,21 @@ def plot_trajectories(dataset_trajectories_dict, dataset_names, output_dir):
         ax = fig.add_subplot(111, aspect='equal',
                              xlabel='x [m]', ylabel='z [m]')
         for alg in p_es_0:
-            pu.plot_trajectory_side(ax, p_es_0[alg], COLORS[alg], 
-                                    PLOT_LABELS[alg])
-        pu.plot_trajectory_side(ax, p_gt_0, 'm', 'Groundtruth')
+            fig_i = plt.figure(figsize=(6, 5.5))
+            ax_i = fig_i.add_subplot(111, aspect='equal',
+                                     xlabel='x [m]', ylabel='y [m]')
+            pu.plot_trajectory_side(ax_i, p_es_0[alg], 'b', 'Estimate', 0.5)
+            pu.plot_trajectory_side(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
+            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            fig_i.tight_layout()
+            fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_side_' +
+                          alg + FORMAT, bbox_inches="tight")
+
+            pu.plot_trajectory_side(ax, p_es_0[alg],
+                                    plot_settings['algo_colors'][alg],
+                                    plot_settings['algo_labels'][alg])
+        plt.sca(ax)
+        pu.plot_trajectory_side(ax, p_gt_raw, 'm', 'Groundtruth')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
@@ -191,151 +242,26 @@ def plot_trajectories(dataset_trajectories_dict, dataset_names, output_dir):
         plt.close(fig)
 
 
-def compute_overall_odometry_errors(config_traj_list,
-                                    overall_boxplot_distances):
-    print("\n>>> Calculating overall relative error on all datasets...")
-    # Compute overall errors and plot
-    total_trans_errors_rel = {}
-    total_trans_errors = {}
-    total_ang_yaw_errors = {}
+def parse_config_file(config_fn):
+    with open(config_fn) as f:
+        d = yaml.load(f)
+    assert type(d['Datasets']) is dict
+    datasets = d['Datasets'].keys()
+    datasets.sort()
+    datasets_labels = {}
+    for v in datasets:
+        datasets_labels[v] = d['Datasets'][v]['label']
 
-    n_dist = len(overall_boxplot_distances)
-    for config_trajectories in config_traj_list:
-        config = config_trajectories[0].alg
-        print('> Processing config {0}...'.format(config))
-        total_trans_errors[config] = [[] for d in range(n_dist)]
-        total_trans_errors_rel[config] = [[] for d in range(n_dist)]
-        total_ang_yaw_errors[config] = [[] for d in range(n_dist)]
-        for traj in config_trajectories:
-            print("> {0}".format(traj.uid))
-            for dist_idx, dist in enumerate(overall_boxplot_distances):
-                traj.compute_relative_error_at_subtraj_len(dist)
-                total_trans_errors[traj.alg][dist_idx].extend(
-                    traj.rel_errors[dist]['rel_trans'])
-                total_trans_errors_rel[traj.alg][dist_idx].extend(
-                    traj.rel_errors[dist]['rel_trans_perc'])
-                total_ang_yaw_errors[traj.alg][dist_idx].extend(
-                    traj.rel_errors[dist]['rel_yaw'])
-        print('< ... analysis for config {0} done'.format(config))
-    print("<<< ... calculating oveall relative error done.\n")
+    assert type(d['Algorithms']) is dict
+    algorithms = d['Algorithms'].keys()
+    algorithms.sort()
+    alg_labels = {}
+    alg_fn = {}
+    for v in algorithms:
+        alg_labels[v] = d['Algorithms'][v]['label']
+        alg_fn[v] = d['Algorithms'][v]['fn']
 
-    overall_err = {}
-    overall_err['trans_err'] = total_trans_errors
-    overall_err['trans_err_perc'] = total_trans_errors_rel
-    overall_err['yaw_err'] = total_ang_yaw_errors
-    overall_err['distances'] = overall_boxplot_distances
-
-    float_fmt = "{:3.2f}"
-    overall_err_tables = {}
-    overall_err_tables['trans_err'] = {}
-    overall_err_tables['trans_err']['values'] = []
-    overall_err_tables['trans_err_perc'] = {}
-    overall_err_tables['trans_err_perc']['values'] = []
-    overall_err_tables['yaw_err'] = {}
-    overall_err_tables['yaw_err']['values'] = []
-
-    rows = []
-    for dist_idx, dist in enumerate(overall_boxplot_distances):
-        dist_str = float_fmt.format(dist)+'m'
-        rows.append(dist_str)
-
-        rel_trans_err_i = []
-        rel_trans_err_perc_i = []
-        rel_yaw_err_i = []
-        for config_trajs in config_traj_list:
-            alg = config_trajs[0].alg
-            mean_trans_e = np.mean(overall_err['trans_err'][alg][dist_idx])
-            rel_trans_err_i.append(float_fmt.format(mean_trans_e))
-            mean_trans_perc_e =\
-                np.mean(overall_err['trans_err_perc'][alg][dist_idx])
-            rel_trans_err_perc_i.append(float_fmt.format(mean_trans_perc_e))
-            mean_yaw_e = np.mean(overall_err['yaw_err'][alg][dist_idx])
-            rel_yaw_err_i.append(float_fmt.format(mean_yaw_e))
-
-        overall_err_tables['trans_err']['values'].append(rel_trans_err_i)
-        overall_err_tables['trans_err_perc']['values'].append(
-            rel_trans_err_perc_i)
-        overall_err_tables['yaw_err']['values'].append(rel_yaw_err_i)
-    cols = []
-    for config_trajs in config_traj_list:
-        alg = config_trajs[0].alg
-        cols.append(alg)
-    overall_err_tables['trans_err']['cols'] = cols
-    overall_err_tables['trans_err']['rows'] = rows
-    overall_err_tables['trans_err_perc']['cols'] = cols
-    overall_err_tables['trans_err_perc']['rows'] = rows
-    overall_err_tables['yaw_err']['cols'] = cols
-    overall_err_tables['yaw_err']['rows'] = rows
-
-    return overall_err, overall_err_tables
-
-
-def write_overall_odometry_errors_table(overall_err_tables, output_dir):
-    print("Writing to overall error to text files...")
-    res_writer.write_tex_table(overall_err_tables['trans_err']['values'],
-                               overall_err_tables['trans_err']['rows'],
-                               overall_err_tables['trans_err']['cols'],
-                               os.path.join(output_dir,
-                                            'overall_rel_trans_err.txt'))
-    res_writer.write_tex_table(overall_err_tables['trans_err_perc']['values'],
-                               overall_err_tables['trans_err_perc']['rows'],
-                               overall_err_tables['trans_err_perc']['cols'],
-                               os.path.join(output_dir,
-                                            'overall_rel_trans_err_perc.txt'))
-    res_writer.write_tex_table(overall_err_tables['yaw_err']['values'],
-                               overall_err_tables['yaw_err']['rows'],
-                               overall_err_tables['yaw_err']['cols'],
-                               os.path.join(output_dir,
-                                            'overall_rel_yaw_err.txt'))
-
-
-def plot_overall_odometry_errors(overall_err, output_dir):
-    print("Plotting overall error...")
-    n_config = len(overall_err['trans_err'])
-    assert n_config == len(overall_err['trans_err_perc'])
-    assert n_config == len(overall_err['yaw_err'])
-
-    config_labels = []
-    config_colors = []
-    for v in overall_err['trans_err'].keys():
-        config_labels.append(PLOT_LABELS[v])
-        config_colors.append(COLORS[v])
-
-    # absolute error
-    fig = plt.figure(figsize=(6, 2.5))
-    ax = fig.add_subplot(
-        111, xlabel='Distance traveled [m]', ylabel='Translation error [m]')
-    pu.boxplot_compare(ax, overall_err['distances'],
-                       overall_err['trans_err'].values(),
-                       config_labels, config_colors)
-    fig.tight_layout()
-    fig.savefig(output_dir+'/overall_rel_translation_error' +
-                FORMAT, bbox_inches="tight")
-    plt.close(fig)
-
-    # relative error
-    fig = plt.figure(figsize=(6, 2.5))
-    ax = fig.add_subplot(
-        111, xlabel='Distance traveled [m]', ylabel='Translation error [\%]')
-    pu.boxplot_compare(ax, overall_err['distances'],
-                       overall_err['trans_err_perc'].values(),
-                       config_labels, config_colors)
-    fig.tight_layout()
-    fig.savefig(output_dir+'/overall_rel_translation_error_percentage' +
-                FORMAT, bbox_inches="tight")
-    plt.close(fig)
-
-    # yaw orientation error
-    fig = plt.figure(figsize=(6, 2.5))
-    ax = fig.add_subplot(
-        111, xlabel='Distance traveled [m]', ylabel='Yaw error [deg]')
-    pu.boxplot_compare(ax, overall_err['distances'],
-                       overall_err['yaw_err'].values(),
-                       config_labels, config_colors)
-    fig.tight_layout()
-    fig.savefig(output_dir+'/overall_rel_yaw_error'+FORMAT,
-                bbox_inches="tight")
-    plt.close(fig)
+    return datasets, datasets_labels, algorithms, alg_labels, alg_fn
 
 
 if __name__ == '__main__':
@@ -343,6 +269,11 @@ if __name__ == '__main__':
 
     default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 '../results')
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../analyze_trajectories_config')
+
+    parser.add_argument('config', type=str,
+                        help='yaml file specifying algorithms and datasets')
     parser.add_argument(
         '--output_dir',
         help="Folder to output plots and data",
@@ -355,13 +286,8 @@ if __name__ == '__main__':
         '--platform', help='HW platform: [laptop, nuc, odroid, up]',
         default='laptop')
     parser.add_argument(
-        '--alg',
-        help='Algorithm configurations',
-        default='all')
-    parser.add_argument(
-        '--dataset',
-        help='[MH_01,...,MH_05,V1_01,...,V1_03,V2_01,...,V2_03, all]',
-        default='all')
+        '--mul_trials', type=int,
+        help='number of trials, None for single run', default=None)
 
     parser.add_argument(
         '--odometry_error_per_dataset',
@@ -370,18 +296,14 @@ if __name__ == '__main__':
         "and different algorithms",
         action='store_true')
     parser.add_argument(
-        '--overall_odometry_error',
-        help="accumulate and analyze the odometry error over all datasets. "
-        "Fixed distances will be used for all datasets and algorithms.",
-        action='store_true')
-    parser.add_argument(
         '--rmse_table', help='Output rms erros into latex tables',
         action='store_true')
-
-    parser.add_argument('--recalculate_errors',
-                        help='Deletes cached errors', action='store_true')
     parser.add_argument('--plot_trajectories',
                         help='Plot the trajectories', action='store_true')
+    parser.add_argument('--rmse_boxplot',
+                        help='Plot the trajectories', action='store_true')
+    parser.add_argument('--recalculate_errors',
+                        help='Deletes cached errors', action='store_true')
     parser.add_argument('--png',
                         help='Save plots as png instead of pdf',
                         action='store_true')
@@ -390,111 +312,153 @@ if __name__ == '__main__':
 
     print("Will analyze results from {0} and output will be "
           "in {1}".format(args.results_dir, args.output_dir))
-
     output_dir = args.output_dir
 
-    alg = [args.alg]
-    if args.alg == 'all' or args.alg is None:
-        alg = ALGORITHM_CONFIGS
-    else:
-        ALGORITHM_CONFIGS = alg
-    print('Will process configurations: {0}'.format(alg))
+    config_fn = os.path.join(config_path, args.config)
 
-    datasets = [args.dataset]
-    if args.dataset is 'all':
-        datasets = DATASETS
-    else:
-        DATASETS = [datasets]
-    print("Will process datasets: {0}".format(datasets))
+    print("Parsing evaluation configuration {0}...".format(config_fn))
+
+    datasets, datasets_labels, algorithms, algo_labels, algo_fn = \
+        parse_config_file(config_fn)
+    assert len(PALLETE) > len(algorithms),\
+        "Not enough colors for all configurations"
+    algo_colors = {}
+    for i in range(len(algorithms)):
+        algo_colors[algorithms[i]] = PALLETE[i]
+
+    print(Fore.YELLOW+"=== Evaluation Configuration Summary ===")
+    print(Fore.YELLOW+"Datasests to evaluate: ")
+    for d in datasets:
+        print(Fore.YELLOW+'- {0}: {1}'.format(d, datasets_labels[d]))
+    print(Fore.YELLOW+"Algorithms to evaluate: ")
+    for a in algorithms:
+        print(Fore.YELLOW+'- {0}: {1}, {2}, {3}'.format(a, algo_labels[a],
+                                                        algo_fn[a],
+                                                        algo_colors[a]))
+    plot_settings = {'datasets_labels': datasets_labels,
+                     'algo_labels': algo_labels,
+                     'algo_colors': algo_colors}
 
     if args.png:
         FORMAT = '.png'
 
+    eval_uid = '_'.join(algorithms) + '_'.join(datasets)
+
+    n_trials = 1
+    if args.mul_trials:
+        print(Fore.YELLOW +
+              "We will ananlyze multiple trials #{0}".format(args.mul_trials))
+        n_trials = args.mul_trials
+
+    need_odometry_error = args.odometry_error_per_dataset
+    if need_odometry_error:
+        print(Fore.YELLOW+"Will calculate odometry errors")
+
     print("#####################################")
-    print(">>> Start loading and preprocessing all trajectories...")
+    print(">>> Loading and calculating errors....")
     print("#####################################")
     # organize by configuration
     config_trajectories_list = []
-    for config_i in alg:
+    config_multierror_list = []
+    dataset_boxdist_map = {}
+    for d in datasets:
+        dataset_boxdist_map[d] = []
+    for config_i in algorithms:
         cur_trajectories_i = []
+        cur_mulierror_i = []
         for d in datasets:
-            print("--- Processing {0}-{1}... ---".format(config_i, d))
-            trial_name = args.platform + '_' + config_i + '_' + d
+            print(Fore.RED + "--- Processing {0}-{1}... ---".format(
+                config_i, d))
+            exp_name = args.platform + '_' + config_i + '_' + d
             trace_dir = os.path.join(args.results_dir,
-                                     args.platform, config_i, trial_name)
-            assert os.path.exists(trace_dir), "No corresponding trace dir"
-            if args.recalculate_errors:
-                Trajectory.remove_cached_error(trace_dir)
-
-            cur_traj = Trajectory(trace_dir, platform=args.platform,
-                                  alg_name=config_i, dataset_name=d)
-
-            cur_trajectories_i.append(cur_traj)
+                                     args.platform, config_i, exp_name)
+            assert os.path.exists(trace_dir),\
+                "{0} not found.".format(trace_dir)
+            traj_list, mt_error = analyze_multiple_trials(
+                trace_dir, algo_fn[config_i], n_trials,
+                recalculate_errors=args.recalculate_errors,
+                preset_boxplot_distances=dataset_boxdist_map[d],
+                compute_odometry_error=need_odometry_error)
+            if not dataset_boxdist_map[d] and traj_list:
+                print("Assign the boxplot distances for {0}...".format(d))
+                dataset_boxdist_map[d] = traj_list[0].preset_boxplot_distances
+            for traj in traj_list:
+                traj.alg = config_i
+                traj.dataset_short_name = d
+            mt_error.saveErrors()
+            mt_error.cache_current_error()
+            mt_error.uid = '_'.join([args.platform, config_i,
+                                     d, str(n_trials)])
+            mt_error.alg = config_i
+            mt_error.dataset = d
+            cur_trajectories_i.append(traj_list)
+            cur_mulierror_i.append(mt_error)
         config_trajectories_list.append(cur_trajectories_i)
+        config_multierror_list.append(cur_mulierror_i)
 
     # organize by dataset name
     dataset_trajectories_list = []
+    dataset_multierror_list = []
     for ds_idx, dataset_nm in enumerate(datasets):
         dataset_trajs = [v[ds_idx] for v in config_trajectories_list]
         dataset_trajectories_list.append(dataset_trajs)
+        dataset_multierrors = [v[ds_idx] for v in config_multierror_list]
+        dataset_multierror_list.append(dataset_multierrors)
 
     print("#####################################")
-    print(">>> Start computing error metrics....")
+    print(">>> Analyze different error types...")
     print("#####################################")
-    print("\n>>> Computing absolute trajectory errors...")
-    rmse_table = {}
-    rmse_table['values'] = []
-    for config_trajs in config_trajectories_list:
-        cur_trans_rmse = []
-        for traj in config_trajs:
-            print("> Processing {0}".format(traj.uid))
-            traj.compute_absolute_error()
-            cur_trans_rmse.append("{:3.2f}".format(
-                traj.abs_errors['abs_e_trans_stats']['rmse']))
-        rmse_table['values'].append(cur_trans_rmse)
-    rmse_table['rows'] = alg
-    rmse_table['cols'] = datasets
-    print("<<< ...computing absolute trajectory errors done.\n")
-
-    dataset_rel_err = {}
-    if args.odometry_error_per_dataset:
-        dataset_rel_err = compute_odometry_error_per_dataset(
-            dataset_trajectories_list, datasets)
-
-    overall_err = {}
-    overall_err_tables = {}
-    if args.overall_odometry_error:
-        overall_err, overall_err_tables = compute_overall_odometry_errors(
-            config_trajectories_list, OVERALL_BOXPLOT_DISTANCES)
-
-    print("#####################################")
-    print(">>> Save computed errors....")
-    print("#####################################")
-    for config_trajs in config_trajectories_list:
-        for traj in config_trajs:
-            print('> Saving {0}'.format(traj.uid))
-            traj.cache_current_error()
-            traj.write_errors_to_yaml()
-
-    print("#####################################")
-    print(">>> Start plotting and writing results....")
-    print("#####################################")
-    if args.plot_trajectories:
-        print('\n--- Plotting trajectory top and side view ... ---')
-        plot_trajectories(dataset_trajectories_list, datasets, output_dir)
-    if args.odometry_error_per_dataset:
-        print('\n--- Generating relative (KITTI style) error plots... ---')
-        plot_odometry_error_per_dataset(dataset_rel_err, datasets, output_dir)
-    if args.overall_odometry_error:
-        print('\n--- Plotting overall error ... ---')
-        plot_overall_odometry_errors(overall_err, output_dir)
-        write_overall_odometry_errors_table(overall_err_tables, output_dir)
+    print(Fore.RED+">>> Processing absolute trajectory errors...")
     if args.rmse_table:
+        rmse_table = {}
+        rmse_table['values'] = []
+        for config_mt_error in config_multierror_list:
+            cur_trans_rmse = []
+            for mt_error_d in config_mt_error:
+                print("> Processing {0}".format(mt_error_d.uid))
+                cur_trans_rmse.append(
+                    "{:3.3f}, {:3.3f} ({:3.3f} - {:3.3f})".format(
+                        mt_error_d.abs_errors['rmse_trans_stats']['mean'],
+                        mt_error_d.abs_errors['rmse_trans_stats']['median'],
+                        mt_error_d.abs_errors['rmse_trans_stats']['min'],
+                        mt_error_d.abs_errors['rmse_trans_stats']['max']))
+            rmse_table['values'].append(cur_trans_rmse)
+        rmse_table['rows'] = algorithms
+        rmse_table['cols'] = datasets
         print('\n--- Generating RMSE tables... ---')
         res_writer.write_tex_table(
             rmse_table['values'], rmse_table['rows'], rmse_table['cols'],
-            os.path.join(output_dir, args.platform + '_translation_rmse.txt'))
+            os.path.join(output_dir, args.platform + '_translation_rmse' +
+                         eval_uid+'.txt'))
 
+    if args.rmse_boxplot and n_trials > 1:
+        rmse_plot_alg = [v for v in algorithms if v.startswith('svo')]
+        algorithm_rmse = collect_rmse_per_dataset(config_multierror_list,
+                                                  rmse_plot_alg)
+        print("--- Generate boxplot for RMSE ---")
+        plot_rmse_per_dataset(algorithm_rmse, datasets, output_dir,
+                              plot_settings)
+    print(Fore.GREEN+"<<< ...processing absolute trajectory errors done.")
+
+    print(Fore.RED+">>> Collecting odometry errors...")
+    if args.odometry_error_per_dataset:
+        dataset_rel_err = {}
+        dataset_rel_err = collect_odometry_error_per_dataset(
+            dataset_multierror_list, datasets)
+        print(Fore.MAGENTA +
+              '--- Generating relative (KITTI style) error plots ---')
+        plot_odometry_error_per_dataset(dataset_rel_err, datasets, output_dir,
+                                        plot_settings)
+    print(Fore.GREEN+"<<< .... processing odometry errors done.\n")
+
+    if args.plot_trajectories:
+        print(Fore.MAGENTA+'--- Plotting trajectory top and side view ... ---')
+        plot_trajectories(dataset_trajectories_list, datasets, output_dir,
+                          plot_settings)
+
+    import subprocess as s
+    s.call(['notify-send', 'rpg_trajectory_evaluation finished',
+            'results in: {0}'.format(os.path.abspath(output_dir))])
     print("#####################################")
     print("<<< Finished.")
     print("#####################################")

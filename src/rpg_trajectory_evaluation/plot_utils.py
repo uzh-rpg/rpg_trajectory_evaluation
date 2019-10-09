@@ -26,17 +26,20 @@ def color_box(bp, color):
 
 
 def boxplot_compare(ax, xlabels,
-                    data, data_labels, data_colors):
+                    data, data_labels, data_colors,
+                    legend=True):
     n_data = len(data)
     n_xlabel = len(xlabels)
     leg_handles = []
     leg_labels = []
     idx = 0
     for idx, d in enumerate(data):
+        # print("idx and d: {0} and {1}".format(idx, d))
         w = 1 / (1.5 * n_data + 1.5)
         widths = [w for pos in np.arange(n_xlabel)]
         positions = [pos - 0.5 + 1.5 * w + idx * w
                      for pos in np.arange(n_xlabel)]
+        # print("Positions: {0}".format(positions))
         bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
         color_box(bp, data_colors[idx])
         tmp, = plt.plot([1, 1], data_colors[idx])
@@ -47,22 +50,23 @@ def boxplot_compare(ax, xlabels,
     ax.set_xticklabels(xlabels)
     xlims = ax.get_xlim()
     ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
-    if n_data != 1:
-        ax.legend(leg_handles, leg_labels, bbox_to_anchor=(
-            1.05, 1), loc=2, borderaxespad=0.)
+    if n_data != 1 and legend:
+        # ax.legend(leg_handles, leg_labels, bbox_to_anchor=(
+            # 1.05, 1), loc=2, borderaxespad=0.)
+        ax.legend(leg_handles, leg_labels)
     map(lambda x: x.set_visible(False), leg_handles)
 
 
-def plot_trajectory_top(ax, pos, color, name):
+def plot_trajectory_top(ax, pos, color, name, alpha=1.0):
     ax.grid(ls='--', color='0.7')
     # pos_0 = pos - pos[0, :]
-    ax.plot(pos[:, 0], pos[:, 1], color+'-', label=name)
+    ax.plot(pos[:, 0], pos[:, 1], color+'-', alpha=alpha, label=name)
 
 
-def plot_trajectory_side(ax, pos, color, name):
+def plot_trajectory_side(ax, pos, color, name, alpha=1.0):
     ax.grid(ls='--', color='0.7')
     # pos_0 = pos - pos[0, :]
-    ax.plot(pos[:, 0], pos[:, 2], color+'-', label=name)
+    ax.plot(pos[:, 0], pos[:, 2], color+'-', alpha=alpha, label=name)
 
 
 def plot_aligned_top(ax, p_gt, p_es, n_align_frames):
@@ -70,8 +74,8 @@ def plot_aligned_top(ax, p_gt, p_es, n_align_frames):
         n_align_frames = p_es.shape[0]
     # p_es_0 = p_es - p_gt[0, :]
     # p_gt_0 = p_gt - p_gt[0, :]
-    ax.plot(p_es[0:n_align_frames, 0], p_es[0:n_align_frames, 1],
-            'g-', linewidth=2, label='aligned')
+    # ax.plot(p_es[0:n_align_frames, 0], p_es[0:n_align_frames, 1],
+        # 'g-', linewidth=2, label='aligned')
     for (x1, y1, z1), (x2, y2, z2) in zip(
             p_es[:n_align_frames:10, :], p_gt[:n_align_frames:10, :]):
         ax.plot([x1, x2], [y1, y2], '-', color="gray")

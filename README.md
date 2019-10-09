@@ -40,7 +40,7 @@ The package can be used as a ROS package as well as a standalone tool.
 To use it as a ROS package, simply clone it into your workspace.
 It only depends on [`catkin_simple`](https://github.com/catkin/catkin_simple) to build.
 
-**Dependencies**: You will need `numpy` and `matplotlib` for the analysis/plotting.
+**Dependencies**: You will need `numpy` and `matplotlib` for the analysis/plotting. You should also install `colorama` for colored console output.
 
 ## Prepare the Data
 Each trajectory estimate (e.g., output of a visual-inertial odometry algorithm) to evaluate is organized as a self-contained folder.
@@ -100,11 +100,13 @@ python2 analyze_trajectory_single.py <result_folder>
 
 #### Output
 After the evaluation is done, you will find two folders under `<result_folder>`:
-* `saved_results`: text files that contains the statistics of different errors
+* `saved_results/traj_est`: text files that contains the statistics of different errors
   * `absolute_err_statistics_<align_type>_<align_frames>.yaml`: the statistics of the absolute error using the specified alignment.
   * `relative_error_statistics_<len>.yaml`: the statistics of the relative error calculated using the sub-trajectories of length `<len>`.
   * `cached_rel_err.pickle`: since the relative error is time consuming to compute, we cache the relative error for different sub-trajectory lengths so that we can directly use them next time.
 * `plots`: plots of absolute errors, relative (odometry) errors and the trajectories.
+
+For multiple trials, the result for trial `n` will have the corresponding suffix, and the statistics of multiple trials will be summarized in files with the name `mt_*`.
 
 Several example plots showing the trajectory, absolute trajectory error and relative error are
 
@@ -115,6 +117,15 @@ Several example plots showing the trajectory, absolute trajectory error and rela
 #### Parameters
 * `--recalculate_errors`: will remove the error cache file mentioned above and re-calculate everything. Default: `False`.
 * `--png`: save plots as png instead of pdf. Default: `False`
+* `--mul_trials`: will analyze `n` runs. In the case of `n > 1`, the estimate files should end with a number suffix (e.g., `stamped_traj_estimate0.txt`). Default: `None`
+
+#### Advanced: Different estimation type
+Sometimes, a SLAM algorithm outputs different types of trajectories, such as real-time poses and optimized keyframe poses (e.g., pose graph). By specifying the estimation type (at the end of the command line), you can ask the script to analyze different files, for example
+* `--est_type traj_est`: analyze `stamped_traj_estimate.txt`
+* `--est_type pose_graph`: analyze `stamped_pose_graph_estimate.txt`
+* `--est_type traj_est pose_graph`: analyze both. In this case you can find the results in corresponding sub-directories in `saved_results` and `plots`.
+
+The mapping from the `est_type` to file names is defined in `scripts/fn_constants.py`. This is also used for analyzing multiple trajectories.
 
 ### Multiple trajectory estimates
 
@@ -122,16 +133,16 @@ For ROS, run
 
 ```
 rosrun rpg_trajectory_evaluation analyze_trajectories.py \
-  --platform <platform> --odometry_error --overall_odometry_error --plot_trajectories --rmse_table
+  euroc_vo.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 otherwise, run
 
 ```
 python2 analyze_trajectories.py \
-  --platform <platform> --odometry_error --overall_odometry_error --plot_trajectories --rmse_table
+  euroc_vo.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 
-These commands will look for `<platform>` folder under `results` and analyze the algorithms and datasets combinations specified in `analyze_trajectories.py`, as described below.
+These commands will look for `<platform>` folder under `results_dir` and analyze the algorithms and datasets combinations specified in `analyze_trajectories.py`, as described below.
 
 #### Datasets organization
 The datasets under `results` are organized as 
@@ -150,12 +161,30 @@ The datasets under `results` are organized as
 ```
 
 Each sub-folder is of the same format as mentioned above.
-In the script `analyze_trajectories.py`, you need to specify the algorithms and datasets to analyze, for example
+You need to specify the algorithms and datasets to analyze for the script `analyze_trajectories.py`.
+We use a configuration file under `scripts/analyze_trajectories_config` to sepcify the details. For example
 
-```python
-ALGORITHM_CONFIGS = ['vio_mono', 'vio_stereo']
-DATASETS = ['MH_01', 'MH_03', 'MH_05', 'V2_01', 'V2_02', 'V2_03']
-PLOT_LABELS = {'vio_mono': 'vio mono', 'vio_stereo': 'vio stereo'}
+```
+Datasets:
+  MH_01:        ---> dataset name
+    label: MH01 ---> plot label for the dataset
+  MH_03:
+    label: MH03
+  MH_05:
+    label: MH05
+  V2_01:
+    label: V201
+  V2_02:
+    label: V202
+  V2_03:
+    label: V203
+Algorithms:
+  vio_mono:         ---> algorithm name
+    fn: traj_est    ---> estimation type to find the correct file name
+    label: vio_mono ---> plot label for the algorithm
+  vio_stereo: 
+    fn: traj_est
+    label: vio_stereo
 ```
 
 will analyze the following folders
@@ -177,23 +206,14 @@ will analyze the following folders
     └── laptop_vio_stereo_V2_03
 ```
 
-Optionally, you can change the following variables in the script for more customization
-
-* `COLORS`: a dictionary specifying the colors for different algorithms. A set of default colors will be generated.
-* `MAX_TRAJ_LENGTHS`: a dictionary specifying the maximum trajectory lengths of datasets.
-If there is no entry for one dataset, the maximum length will be computed from the groundtruth.
-* `OVERALL_BOXPLOT_DISTANCES`: sub-trajectory lengths used to evaluate the relative errors on all the datasets to compute the overall relative error.
-
-
 #### Output
 The evaluation process will generate the `saved_results` folder in each result folder,
 same as the evaluation for single trajectory estimate.
 In addition, it will generate plots and text files under `results` folder comparing different algorithms:
 * `<dataset>_trajectory_side/top.pdf`: plots of the aligned trajectories of different algorithms on `<dataset>`, along with the groundtruth.
-* `<dataset>_translation/yaw_error.pdf`: plots of the relative translation and yaw error of different algorithms on `<dataset>`.
-* `overall_rel_trans/yaw_error.pdf`: plots of the overall relative error of different algorithms evaluated on all datasets.
-* `overall_rel_trans/yaw_err.txt`: tables of the relative error of different algorithms evaluated on all datasets.
-* `<platform>_translation_rmse.txt`: table of the translation RMSE (absolute trajectory error) of all datasets and algorithms.
+* `<dataset>_trans_yaw_error.pdf`: plots of the relative translation and yaw error of different algorithms on `<dataset>`.
+* `all_translation/rotation_rmse.pdf`: boxplots of the RMSE of multiple runs for all datasets.
+* `<platform>_translation_rmse<algorithm_dataset_string>.txt`: `Latex` table summarizing the RMSE of all configurations. `<algorithm_dataset_string>` is an indentifier generated from the algorithms and datasets evaluated.
 
 The tables can be readily used in `Latex` files.
 
@@ -203,20 +223,19 @@ Several example plots comparing the performance of different algorithms are
 ![overall_rel_err_v203](./doc/V203_translation_error.png)
 
 #### Parameters
+Configuration: `config` configuration file under `scripts/analyze_trajectories_config`
+
 Paths:
 * `--results_dir`: the folder where the `<platform>` folder will be found. Default: `results` folder in the toolbox folder.
 * `--output_dir`: the folder for all the plots and text files. Default: `results` folder in the toolbox folder.
-
-Which trajectory estimate to process:
 * `--platform`: the folder of results to be found under the `<results_dir>`. Default: `laptop`
-* `--alg`: which algorithm to process. Default: `all`, will process all the algorithms specified in the script.
-* `--dataset`: which dataset to process. Default: `all`, will process all the datasets specified in the script.
 
 Analysis options:
+* `--mul_trials`: how many trials we want to analyze. Default: `None`. If some algorithm-dataset configuration has less runs, only the available ones will be considered.
 * `--odometry_error_per_dataset`: whether to compute the relative error for each dataset. Default: `False`.
-* `--overall_odometry_error`: whether to compute the overall relative error on all the datasets. Default: `False`.
 * `--rmse_table`: whether to generate the table of translation RMSE (absolute error). Default: `False`.
 * `--plot_trajectories`: whether to plot trajectories. Default: `False`.
+* `--rmse_boxplot`: whether to plot boxplot for RMSE of different datasets. Default: `False`.
 
 Misc:
 * `--recalculate_errors:` whether to clear the cache and recalculate everything. Default: False.
