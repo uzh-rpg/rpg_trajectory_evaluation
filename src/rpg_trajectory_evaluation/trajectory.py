@@ -184,13 +184,13 @@ class Trajectory:
     def remove_files_in_cache_dir(data_dir, est_type, base_fn):
         rm_fn = os.path.join(data_dir, Trajectory.saved_res_dir_nm,
                              est_type, Trajectory.cache_res_dir_nm, base_fn)
-        Trajectory._safeRemoveFile(rm_fn)
+        Trajectory._safe_remove_file(rm_fn)
 
     @staticmethod
     def remove_files_in_save_dir(data_dir, est_type, base_fn):
         rm_fn = os.path.join(data_dir, Trajectory.saved_res_dir_nm,
                              est_type, base_fn)
-        Trajectory._safeRemoveFile(rm_fn)
+        Trajectory._safe_remove_file(rm_fn)
 
     def compute_boxplot_distances(self):
         pcts = [0.1, 0.2, 0.3, 0.4, 0.5]
@@ -312,7 +312,7 @@ class Trajectory:
             print("Computing relative error at sub-trajectory "
                   "length {0}".format(subtraj_len))
             Tcm = np.identity(4)
-            _, e_trans, e_trans_perc, e_yaw, e_gravity, e_rot =\
+            _, e_trans, e_trans_perc, e_yaw, e_gravity, e_rot, e_rot_deg_per_m =\
                 traj_err.compute_relative_error(
                     self.p_es, self.q_es, self.p_gt, self.q_gt, Tcm,
                     subtraj_len, max_dist_diff, self.accum_distances,
@@ -334,7 +334,10 @@ class Trajectory:
                             res_writer.compute_statistics(e_yaw),
                             'rel_gravity': e_gravity,
                             'rel_gravity_stats':
-                            res_writer.compute_statistics(e_gravity)}
+                            res_writer.compute_statistics(e_gravity),
+                            'rel_rot_deg_per_m': e_rot_deg_per_m,
+                            'rel_rot_deg_per_m_stats':
+                            res_writer.compute_statistics(e_rot_deg_per_m)}
             self.rel_errors[subtraj_len] = dist_rel_err
         return True
 

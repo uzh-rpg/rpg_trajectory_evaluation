@@ -48,6 +48,7 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
     error_yaw = []
     error_gravity = []
     e_rot = []
+    e_rot_deg_per_m = []
     for e in errors:
         tn = np.linalg.norm(e[0:3, 3])
         error_trans_norm.append(tn)
@@ -57,8 +58,10 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
         error_yaw.append(abs(ypr_angles[0])*180.0/np.pi)
         error_gravity.append(
             np.sqrt(ypr_angles[1]**2+ypr_angles[2]**2)*180.0/np.pi)
+        e_rot_deg_per_m.append(e_rot[-1] / dist)
     return errors, np.array(error_trans_norm), np.array(error_trans_perc),\
-        np.array(error_yaw), np.array(error_gravity), np.array(e_rot)
+        np.array(error_yaw), np.array(error_gravity), np.array(e_rot),\
+        np.array(e_rot_deg_per_m)
 
 
 def compute_absolute_error(p_es_aligned, q_es_aligned, p_gt, q_gt):
