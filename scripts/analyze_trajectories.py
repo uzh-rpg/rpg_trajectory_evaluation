@@ -293,7 +293,7 @@ def plot_overall_odometry_errors(odo_err_col, plot_settings, output_dir):
         ax = fig.add_subplot(
             111, xlabel='Distance traveled [m]', ylabel=ylabel)
         pu.boxplot_compare(ax, distances, errors,
-                           labels, colors, legend=False)
+                           labels, colors, legend=True)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + 'overall_{}'.format(et)+FORMAT,
                     bbox_inches="tight", dpi=args.dpi)
@@ -322,8 +322,17 @@ def parse_config_file(config_fn):
     boxplot_distances = []
     if 'RelDistances' in d:
         boxplot_distances = d['RelDistances']
+    boxplot_percentages = []
+    if 'RelDistancePercentages' in d:
+        boxplot_percentages = d['RelDistancePercentages']
 
-    return datasets, datasets_labels, algorithms, alg_labels, alg_fn, boxplot_distances
+    if boxplot_distances and boxplot_percentages:
+        print(Fore.RED + "Found both both distances and percentages for boxplot distances")
+        print(Fore.RED + "Will use the distances instead of percentages.")
+        boxplot_percentages = []
+
+    return datasets, datasets_labels, algorithms, alg_labels, alg_fn,\
+        boxplot_distances, boxplot_percentages
 
 
 if __name__ == '__main__':
@@ -392,7 +401,7 @@ if __name__ == '__main__':
 
     print("Parsing evaluation configuration {0}...".format(config_fn))
 
-    datasets, datasets_labels, algorithms, algo_labels, algo_fn, rel_e_distances = \
+    datasets, datasets_labels, algorithms, algo_labels, algo_fn, rel_e_distances, rel_e_perc = \
         parse_config_file(config_fn)
     datasets_res_dir = {}
     for d in datasets:
@@ -460,6 +469,7 @@ if __name__ == '__main__':
                 trace_dir, algo_fn[config_i], n_trials,
                 recalculate_errors=args.recalculate_errors,
                 preset_boxplot_distances=dataset_boxdist_map[d],
+                preset_boxplot_percentages=rel_e_perc,
                 compute_odometry_error=need_odometry_error)
             if not dataset_boxdist_map[d] and traj_list:
                 print("Assign the boxplot distances for {0}...".format(d))

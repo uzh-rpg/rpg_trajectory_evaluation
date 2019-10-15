@@ -29,7 +29,8 @@ class Trajectory:
                  nm_gt='stamped_groundtruth.txt',
                  nm_est='stamped_traj_estimate.txt',
                  nm_matches='stamped_est_gt_matches.txt',
-                 preset_boxplot_distances=[]):
+                 preset_boxplot_distances=[],
+                 preset_boxplot_percentages=[0.1, 0.2, 0.3, 0.4, 0.5]):
 
         assert os.path.exists(results_dir),\
             "Specified directory {0} does not exist.".format(results_dir)
@@ -102,6 +103,7 @@ class Trajectory:
             print(Fore.RED+"Loading data failed.")
             return
 
+        self.boxplot_pcts = preset_boxplot_percentages
         if len(preset_boxplot_distances) != 0:
             print("Use preset boxplot distances.")
             self.preset_boxplot_distances = preset_boxplot_distances
@@ -193,11 +195,10 @@ class Trajectory:
         Trajectory._safe_remove_file(rm_fn)
 
     def compute_boxplot_distances(self):
-        pcts = [0.1, 0.2, 0.3, 0.4, 0.5]
         print("Computing preset subtrajectory lengths for relative errors...")
-        print("Use percentage {0} of trajectory length.".format(pcts))
+        print("Use percentage {0} of trajectory length.".format(self.boxplot_pcts))
         self.preset_boxplot_distances = [np.floor(pct*self.traj_length)
-                                         for pct in pcts]
+                                         for pct in self.boxplot_pcts]
 
         print("...done. Computed preset subtrajecory lengths:"
               " {0}".format(self.preset_boxplot_distances))
@@ -317,9 +318,6 @@ class Trajectory:
                     self.p_es, self.q_es, self.p_gt, self.q_gt, Tcm,
                     subtraj_len, max_dist_diff, self.accum_distances,
                     self.scale)
-            if e_trans is None:
-                print("Relative error at {0} fails.".format(subtraj_len))
-                return False
             dist_rel_err = {'rel_trans': e_trans,
                             'rel_trans_stats':
                             res_writer.compute_statistics(e_trans),

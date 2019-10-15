@@ -20,7 +20,8 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
     print('number of samples = {0} '.format(n_samples))
     if n_samples < 2:
         print("Too few samples! Will not compute.")
-        return None, None, None, None, None, None
+        return np.array([]), np.array([]), np.array([]), np.array([]), np.array([]),\
+            np.array([]), np.array([])
 
     T_mc = np.linalg.inv(T_cm)
     errors = []

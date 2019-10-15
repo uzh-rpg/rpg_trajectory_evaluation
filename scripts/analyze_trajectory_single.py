@@ -25,6 +25,7 @@ FORMAT = '.pdf'
 def analyze_multiple_trials(results_dir, est_type, n_trials,
                             recalculate_errors=False,
                             preset_boxplot_distances=[],
+                            preset_boxplot_percentages=[0.1, 0.2, 0.3, 0.4, 0.5],
                             compute_odometry_error=True):
     traj_list = []
     mt_error = MulTrajError()
@@ -46,7 +47,8 @@ def analyze_multiple_trials(results_dir, est_type, n_trials,
             results_dir, est_type=est_type, suffix=suffix,
             nm_est=kNsToEstFnMapping[est_type] + suffix + '.'+kFnExt,
             nm_matches=match_base_fn,
-            preset_boxplot_distances=preset_boxplot_distances)
+            preset_boxplot_distances=preset_boxplot_distances,
+            preset_boxplot_percentages=preset_boxplot_percentages)
         if traj.data_loaded:
             traj.compute_absolute_error()
             if compute_odometry_error:
