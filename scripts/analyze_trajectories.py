@@ -3,6 +3,7 @@
 import os
 import argparse
 import yaml
+import json
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -98,7 +99,7 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir,
                            config_labels, config_colors, legend=True)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
-                    '_trans_yaw_error'+FORMAT, bbox_inches="tight")
+                    '_trans_yaw_error'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
         # relative error
@@ -111,7 +112,7 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir,
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
                     '_translation_error_percentage'+FORMAT,
-                    bbox_inches="tight")
+                    bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
 
@@ -159,7 +160,7 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, out_dir,
                        config_labels, config_colors)
     fig.tight_layout()
     fig.savefig(output_dir+'/' +
-                'all_translation_rmse'+FORMAT, bbox_inches="tight")
+                'all_translation_rmse'+FORMAT, bbox_inches="tight", dpi=args.dpi)
     plt.close(fig)
 
     fig = plt.figure(figsize=(6, 3))
@@ -170,7 +171,7 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, out_dir,
                        config_labels, config_colors)
     fig.tight_layout()
     fig.savefig(output_dir+'/' +
-                'all_rotation_rmse'+FORMAT, bbox_inches="tight")
+                'all_rotation_rmse'+FORMAT, bbox_inches="tight", dpi=args.dpi)
     plt.close(fig)
 
 
@@ -202,7 +203,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             fig_i.tight_layout()
             fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_top_' +
-                          alg + FORMAT, bbox_inches="tight")
+                          alg + FORMAT, bbox_inches="tight", dpi=args.dpi)
 
             pu.plot_trajectory_top(ax, p_es_0[alg],
                                    plot_settings['algo_colors'][alg],
@@ -212,7 +213,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + dataset_nm +
-                    '_trajectory_top'+FORMAT, bbox_inches="tight")
+                    '_trajectory_top'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
         # plot trajectory side
@@ -228,7 +229,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             fig_i.tight_layout()
             fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_side_' +
-                          alg + FORMAT, bbox_inches="tight")
+                          alg + FORMAT, bbox_inches="tight", dpi=args.dpi)
 
             pu.plot_trajectory_side(ax, p_es_0[alg],
                                     plot_settings['algo_colors'][alg],
@@ -238,7 +239,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
-                    '_trajectory_side'+FORMAT, bbox_inches="tight")
+                    '_trajectory_side'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
 
@@ -292,7 +293,7 @@ def plot_overall_odometry_errors(odo_err_col, plot_settings, out_dir):
                            labels, colors, legend=False)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + 'overall_{}'.format(et)+FORMAT,
-                    bbox_inches="tight")
+                    bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
 
@@ -360,6 +361,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--rmse_table', help='Output rms erros into latex tables',
         action='store_true')
+    parser.add_argument('--write_time_statistics', help='write time statistics',
+                        action='store_true')
     parser.add_argument('--plot_trajectories',
                         help='Plot the trajectories', action='store_true')
     parser.add_argument('--rmse_boxplot',
@@ -369,9 +372,10 @@ if __name__ == '__main__':
     parser.add_argument('--png',
                         help='Save plots as png instead of pdf',
                         action='store_true')
+    parser.add_argument('--dpi', type=int, default=300)
     parser.set_defaults(odometry_error_per_dataset=False, rmse_table=False,
                         plot_trajectories=False, rmse_boxplot=False,
-                        recalculate_errors=False, png=False)
+                        recalculate_errors=False, png=False, time_statistics=False)
     args = parser.parse_args()
     print("Arguments:\n{}".format(
         '\n'.join(['- {}: {}'.format(k, v)
@@ -554,6 +558,23 @@ if __name__ == '__main__':
         print(Fore.MAGENTA+'--- Plotting trajectory top and side view ... ---')
         plot_trajectories(dataset_trajectories_list, datasets, output_dir,
                           plot_settings)
+
+    if args.write_time_statistics:
+        dataset_alg_t_stats = []
+        for didx, d in enumerate(datasets):
+            cur_d_time_stats = {}
+            for algidx, alg in enumerate(algorithms):
+                cur_alg_t_stats = {'start': [], 'end': [], 'n_meas': []}
+                for traj in dataset_trajectories_list[didx][algidx]:
+                    cur_alg_t_stats['start'].append(traj.t_es[0])
+                    cur_alg_t_stats['end'].append(traj.t_es[-1])
+                    cur_alg_t_stats['n_meas'].append(traj.t_es.size)
+                cur_d_time_stats[alg] = cur_alg_t_stats
+            dataset_alg_t_stats.append(cur_d_time_stats)
+
+        for didx, d in enumerate(datasets):
+            with open(os.path.join(output_dir, '{}_meas_stats.json'.format(d)), 'w') as f:
+                json.dump(dataset_alg_t_stats[didx], f, indent=2)
 
     import subprocess as s
     s.call(['notify-send', 'rpg_trajectory_evaluation finished',
