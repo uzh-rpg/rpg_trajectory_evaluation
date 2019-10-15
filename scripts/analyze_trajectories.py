@@ -3,6 +3,7 @@
 import os
 import argparse
 import yaml
+import shutil
 import json
 
 import numpy as np
@@ -74,9 +75,10 @@ def collect_odometry_error_per_dataset(dataset_multierror_list,
     return dataset_rel_err
 
 
-def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, out_dir,
+def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, datasets_outdir,
                                     plot_settings):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
+        output_dir = datasets_outdir[dataset_nm]
         print("Plotting {0}...".format(dataset_nm))
         rel_err = dataset_rel_err[dataset_idx]
         distances = rel_err['subtraj_len']
@@ -133,7 +135,7 @@ def collect_rmse_per_dataset(config_multierror_list,
     return algorithm_rmse
 
 
-def plot_rmse_per_dataset(algorithm_rmse, dataset_names, out_dir,
+def plot_rmse_per_dataset(algorithm_rmse, dataset_names, output_dir,
                           plot_settings):
     config_labels = []
     config_colors = []
@@ -175,9 +177,10 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, out_dir,
     plt.close(fig)
 
 
-def plot_trajectories(dataset_trajectories_list, dataset_names, output_dir,
+def plot_trajectories(dataset_trajectories_list, dataset_names, datasets_out_dir,
                       plot_settings, plot_idx=0):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
+        output_dir = datasets_out_dir[dataset_nm]
         dataset_trajs = dataset_trajectories_list[dataset_idx]
         p_es_0 = {}
         p_gt_raw = (dataset_trajs[0])[plot_idx].p_gt_raw
@@ -263,7 +266,7 @@ def collect_odometry_error_per_algorithm(config_multierror_list, algorithms,
     return odometry_error_collection
 
 
-def plot_overall_odometry_errors(odo_err_col, plot_settings, out_dir):
+def plot_overall_odometry_errors(odo_err_col, plot_settings, output_dir):
     for et in odo_err_col:
         if et == 'rel_trans_perc':
             ylabel = 'Translation error percentage'
@@ -391,6 +394,13 @@ if __name__ == '__main__':
 
     datasets, datasets_labels, algorithms, algo_labels, algo_fn, rel_e_distances = \
         parse_config_file(config_fn)
+    datasets_res_dir = {}
+    for d in datasets:
+        cur_res_dir = os.path.join(output_dir, '{}_{}_results'.format(args.platform, d))
+        if os.path.exists(cur_res_dir):
+            shutil.rmtree(cur_res_dir)
+        os.makedirs(cur_res_dir)
+        datasets_res_dir[d] = cur_res_dir
     same_subtraj = True if rel_e_distances else False
     assert len(PALLETE) > len(algorithms),\
         "Not enough colors for all configurations"
@@ -519,7 +529,7 @@ if __name__ == '__main__':
             dataset_multierror_list, datasets)
         print(Fore.MAGENTA +
               '--- Generating relative (KITTI style) error plots ---')
-        plot_odometry_error_per_dataset(dataset_rel_err, datasets, output_dir,
+        plot_odometry_error_per_dataset(dataset_rel_err, datasets, datasets_res_dir,
                                         plot_settings)
     print(Fore.GREEN+"<<< .... processing odometry errors done.\n")
 
@@ -556,7 +566,7 @@ if __name__ == '__main__':
 
     if args.plot_trajectories:
         print(Fore.MAGENTA+'--- Plotting trajectory top and side view ... ---')
-        plot_trajectories(dataset_trajectories_list, datasets, output_dir,
+        plot_trajectories(dataset_trajectories_list, datasets, datasets_res_dir,
                           plot_settings)
 
     if args.write_time_statistics:
@@ -573,7 +583,7 @@ if __name__ == '__main__':
             dataset_alg_t_stats.append(cur_d_time_stats)
 
         for didx, d in enumerate(datasets):
-            with open(os.path.join(output_dir, '{}_meas_stats.json'.format(d)), 'w') as f:
+            with open(os.path.join(datasets_res_dir[d], '{}_meas_stats.json'.format(d)), 'w') as f:
                 json.dump(dataset_alg_t_stats[didx], f, indent=2)
 
     import subprocess as s
