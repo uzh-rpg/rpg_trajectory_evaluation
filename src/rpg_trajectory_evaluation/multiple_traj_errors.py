@@ -44,13 +44,15 @@ class MulTrajError(object):
 
         if not self.rel_errors.keys():
             # first run
-            for d, e in traj.rel_errors.iteritems():
+            for d in traj.preset_boxplot_distances:
+                e = traj.rel_errors[d]
                 self.rel_errors[d] = {}
                 for et in kRelMetrics:
                     (self.rel_errors[d])[et] = e[et]
         else:
             # append
-            for d, e in traj.rel_errors.iteritems():
+            for d in traj.preset_boxplot_distances:
+                e = traj.rel_errors[d]
                 assert d in self.rel_errors, "Could not find the distances"
                 for et in kRelMetrics:
                     (self.rel_errors[d])[et] = np.concatenate(

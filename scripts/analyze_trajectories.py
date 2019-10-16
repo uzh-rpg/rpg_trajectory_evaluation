@@ -5,6 +5,7 @@ import argparse
 import yaml
 import shutil
 import json
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -250,7 +251,10 @@ def collect_odometry_error_per_algorithm(config_multierror_list, algorithms, dis
         for idx, alg in enumerate(algorithms):
             alg_dist_err = {}
             for mt_error in config_multierror_list[idx]:
-                for dist in distances:
+                cal_distances = distances[:]
+                if not cal_distances:
+                    cal_distances = mt_error.rel_errors.keys()
+                for dist in cal_distances:
                     errors = mt_error.rel_errors[dist]
                     if dist not in alg_dist_err:
                         alg_dist_err[dist] = errors[et].tolist()
@@ -435,7 +439,8 @@ if __name__ == '__main__':
     if args.png:
         FORMAT = '.png'
 
-    eval_uid = '_'.join(algorithms) + '_'.join(datasets)
+    eval_uid = '_'.join(list(plot_settings['algo_labels'].values())) +\
+        datetime.now().strftime("%Y%m%d%H%M")
 
     n_trials = 1
     if args.mul_trials:
