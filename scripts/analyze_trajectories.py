@@ -189,11 +189,14 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         fig = plt.figure(figsize=(6, 5.5))
         ax = fig.add_subplot(111, aspect='equal',
                              xlabel='x [m]', ylabel='y [m]')
+        if dataset_nm in plot_settings['datasets_titles']:
+            ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
             fig_i = plt.figure(figsize=(6, 5.5))
             ax_i = fig_i.add_subplot(111, aspect='equal',
                                      xlabel='x [m]', ylabel='y [m]')
-            pu.plot_trajectory_top(ax_i, p_es_0[alg], 'b', 'Estimate', 0.5)
+            pu.plot_trajectory_top(ax_i, p_es_0[alg], 'b',
+                                   'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
             pu.plot_trajectory_top(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
             pu.plot_aligned_top(ax_i, p_es_0[alg], p_gt_0[alg], -1)
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -217,11 +220,14 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         fig = plt.figure(figsize=(6, 2.2))
         ax = fig.add_subplot(111, aspect='equal',
                              xlabel='x [m]', ylabel='z [m]')
+        if dataset_nm in plot_settings['datasets_titles']:
+            ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
             fig_i = plt.figure(figsize=(6, 5.5))
             ax_i = fig_i.add_subplot(111, aspect='equal',
                                      xlabel='x [m]', ylabel='y [m]')
-            pu.plot_trajectory_side(ax_i, p_es_0[alg], 'b', 'Estimate', 0.5)
+            pu.plot_trajectory_side(ax_i, p_es_0[alg], 'b',
+                                    'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
             pu.plot_trajectory_side(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
             plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             fig_i.tight_layout()
@@ -308,8 +314,11 @@ def parse_config_file(config_fn, sort_names):
     if sort_names:
         datasets.sort()
     datasets_labels = {}
+    datasets_titles = {}
     for v in datasets:
         datasets_labels[v] = d['Datasets'][v]['label']
+        if 'title' in d['Datasets'][v]:
+            datasets_titles[v] = d['Datasets'][v]['title']
 
     assert type(d['Algorithms']) is dict
     algorithms = d['Algorithms'].keys()
@@ -333,7 +342,7 @@ def parse_config_file(config_fn, sort_names):
         print(Fore.RED + "Will use the distances instead of percentages.")
         boxplot_percentages = []
 
-    return datasets, datasets_labels, algorithms, alg_labels, alg_fn,\
+    return datasets, datasets_labels, datasets_titles, algorithms, alg_labels, alg_fn,\
         boxplot_distances, boxplot_percentages
 
 
@@ -406,7 +415,8 @@ if __name__ == '__main__':
 
     print("Parsing evaluation configuration {0}...".format(config_fn))
 
-    datasets, datasets_labels, algorithms, algo_labels, algo_fn, rel_e_distances, rel_e_perc = \
+    datasets, datasets_labels, datasets_titles,\
+        algorithms, algo_labels, algo_fn, rel_e_distances, rel_e_perc = \
         parse_config_file(config_fn, args.sort_names)
     shutil.copy2(config_fn, output_dir)
     datasets_res_dir = {}
@@ -433,6 +443,7 @@ if __name__ == '__main__':
                                                         algo_fn[a],
                                                         algo_colors[a]))
     plot_settings = {'datasets_labels': datasets_labels,
+                     'datasets_titles': datasets_titles,
                      'algo_labels': algo_labels,
                      'algo_colors': algo_colors}
 
