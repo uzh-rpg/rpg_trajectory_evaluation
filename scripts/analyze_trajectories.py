@@ -170,7 +170,8 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, algorithm_names,
 
 
 def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
-                      datasets_out_dir, plot_settings, plot_idx=0):
+                      datasets_out_dir, plot_settings, plot_idx=0, plot_side=True,
+                      plot_aligned=True, plot_traj_per_dataset=True):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         output_dir = datasets_out_dir[dataset_nm]
         dataset_trajs = dataset_trajectories_list[dataset_idx]
@@ -192,19 +193,21 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         if dataset_nm in plot_settings['datasets_titles']:
             ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
-            fig_i = plt.figure(figsize=(6, 5.5))
-            ax_i = fig_i.add_subplot(111, aspect='equal',
-                                     xlabel='x [m]', ylabel='y [m]')
-            pu.plot_trajectory_top(ax_i, p_es_0[alg], 'b',
-                                   'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
-            pu.plot_trajectory_top(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
-            pu.plot_aligned_top(ax_i, p_es_0[alg], p_gt_0[alg], -1)
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            fig_i.tight_layout()
-            fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_top_' +
-                          plot_settings['algo_labels'][alg] + FORMAT,
-                          bbox_inches="tight", dpi=args.dpi)
-
+            if plot_traj_per_dataset:
+                fig_i = plt.figure(figsize=(6, 5.5))
+                ax_i = fig_i.add_subplot(111, aspect='equal',
+                                         xlabel='x [m]', ylabel='y [m]')
+                pu.plot_trajectory_top(ax_i, p_es_0[alg], 'b',
+                                       'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
+                pu.plot_trajectory_top(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
+                if plot_aligned:
+                    pu.plot_aligned_top(ax_i, p_es_0[alg], p_gt_0[alg], -1)
+                plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                fig_i.tight_layout()
+                fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_top_' +
+                              plot_settings['algo_labels'][alg] + FORMAT,
+                              bbox_inches="tight", dpi=args.dpi)
+                plt.close(fig_i)
             pu.plot_trajectory_top(ax, p_es_0[alg],
                                    plot_settings['algo_colors'][alg],
                                    plot_settings['algo_labels'][alg])
@@ -217,24 +220,27 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         plt.close(fig)
 
         # plot trajectory side
+        if not plot_side:
+            continue
         fig = plt.figure(figsize=(6, 2.2))
         ax = fig.add_subplot(111, aspect='equal',
                              xlabel='x [m]', ylabel='z [m]')
         if dataset_nm in plot_settings['datasets_titles']:
             ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
-            fig_i = plt.figure(figsize=(6, 5.5))
-            ax_i = fig_i.add_subplot(111, aspect='equal',
-                                     xlabel='x [m]', ylabel='y [m]')
-            pu.plot_trajectory_side(ax_i, p_es_0[alg], 'b',
-                                    'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
-            pu.plot_trajectory_side(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
-            plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-            fig_i.tight_layout()
-            fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_side_' +
-                          plot_settings['algo_labels'][alg] + FORMAT,
-                          bbox_inches="tight", dpi=args.dpi)
-
+            if plot_traj_per_dataset:
+                fig_i = plt.figure(figsize=(6, 5.5))
+                ax_i = fig_i.add_subplot(111, aspect='equal',
+                                         xlabel='x [m]', ylabel='y [m]')
+                pu.plot_trajectory_side(ax_i, p_es_0[alg], 'b',
+                                        'Estimate ' + plot_settings['algo_labels'][alg], 0.5)
+                pu.plot_trajectory_side(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
+                plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                fig_i.tight_layout()
+                fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_side_' +
+                              plot_settings['algo_labels'][alg] + FORMAT,
+                              bbox_inches="tight", dpi=args.dpi)
+                plt.close(fig_i)
             pu.plot_trajectory_side(ax, p_es_0[alg],
                                     plot_settings['algo_colors'][alg],
                                     plot_settings['algo_labels'][alg])
@@ -386,10 +392,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--rmse_table', help='Output rms erros into latex tables',
         action='store_true')
+    parser.add_argument(
+        '--rmse_table_median_only', action='store_true', dest='rmse_median_only')
     parser.add_argument('--write_time_statistics', help='write time statistics',
                         action='store_true')
     parser.add_argument('--plot_trajectories',
                         help='Plot the trajectories', action='store_true')
+    parser.add_argument('--no_plot_side', action='store_false', dest='plot_side')
+    parser.add_argument('--no_plot_aligned', action='store_false', dest='plot_aligned')
+    parser.add_argument('--no_plot_traj_per_dataset', action='store_false',
+                        dest='plot_traj_per_dataset')
     parser.add_argument('--rmse_boxplot',
                         help='Plot the trajectories', action='store_true')
     parser.add_argument('--recalculate_errors',
@@ -401,7 +413,8 @@ if __name__ == '__main__':
     parser.set_defaults(odometry_error_per_dataset=False, rmse_table=False,
                         plot_trajectories=False, rmse_boxplot=False,
                         recalculate_errors=False, png=False, time_statistics=False,
-                        sort_names=True)
+                        sort_names=True, plot_side=True, plot_aligned=True,
+                        plot_traj_per_dataset=True, rmse_median_only=False)
     args = parser.parse_args()
     print("Arguments:\n{}".format(
         '\n'.join(['- {}: {}'.format(k, v)
@@ -526,12 +539,17 @@ if __name__ == '__main__':
             cur_trans_rmse = []
             for mt_error_d in config_mt_error:
                 print("> Processing {0}".format(mt_error_d.uid))
-                cur_trans_rmse.append(
-                    "{:3.3f}, {:3.3f} ({:3.3f} - {:3.3f})".format(
-                        mt_error_d.abs_errors['rmse_trans_stats']['mean'],
-                        mt_error_d.abs_errors['rmse_trans_stats']['median'],
-                        mt_error_d.abs_errors['rmse_trans_stats']['min'],
-                        mt_error_d.abs_errors['rmse_trans_stats']['max']))
+                if args.rmse_median_only or n_trials == 1:
+                    cur_trans_rmse.append(
+                        "{:3.3f}".format(
+                            mt_error_d.abs_errors['rmse_trans_stats']['median']))
+                else:
+                    cur_trans_rmse.append(
+                        "{:3.3f}, {:3.3f} ({:3.3f} - {:3.3f})".format(
+                            mt_error_d.abs_errors['rmse_trans_stats']['mean'],
+                            mt_error_d.abs_errors['rmse_trans_stats']['median'],
+                            mt_error_d.abs_errors['rmse_trans_stats']['min'],
+                            mt_error_d.abs_errors['rmse_trans_stats']['max']))
             rmse_table['values'].append(cur_trans_rmse)
         rmse_table['rows'] = algorithms
         rmse_table['cols'] = datasets
@@ -595,7 +613,9 @@ if __name__ == '__main__':
     if args.plot_trajectories:
         print(Fore.MAGENTA+'--- Plotting trajectory top and side view ... ---')
         plot_trajectories(dataset_trajectories_list, datasets, algorithms,
-                          datasets_res_dir, plot_settings)
+                          datasets_res_dir, plot_settings, plot_side=args.plot_side,
+                          plot_aligned=args.plot_aligned,
+                          plot_traj_per_dataset=args.plot_traj_per_dataset)
 
     if args.write_time_statistics:
         dataset_alg_t_stats = []
