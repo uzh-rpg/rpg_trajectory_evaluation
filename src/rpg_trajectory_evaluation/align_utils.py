@@ -62,7 +62,7 @@ def alignSE3Single(p_es, p_gt, q_es, q_gt):
     '''
 
     p_es_0, q_es_0 = p_es[0, :], q_es[0, :]
-    p_gt_0, q_gt_0 = p_gt[0, :], q_gt[0, 0]
+    p_gt_0, q_gt_0 = p_gt[0, :], q_gt[0, :]
 
     g_rot = tfs.quaternion_matrix(q_gt_0)
     g_rot = g_rot[0:3, 0:3]
@@ -81,7 +81,7 @@ def alignSE3(p_es, p_gt, q_es, q_gt, n_aligned=-1):
         gt = R * est + t
     '''
     if n_aligned == 1:
-        R, t = alignSE3Single(p_es, p_gt)
+        R, t = alignSE3Single(p_es, p_gt, q_es, q_gt)
         return R, t
     else:
         idxs = _getIndices(n_aligned, p_es.shape[0])
