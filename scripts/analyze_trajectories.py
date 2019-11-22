@@ -171,7 +171,7 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, algorithm_names,
 
 def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
                       datasets_out_dir, plot_settings, plot_idx=0, plot_side=True,
-                      plot_aligned=True, plot_traj_per_dataset=True):
+                      plot_aligned=True, plot_traj_per_alg=True):
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         output_dir = datasets_out_dir[dataset_nm]
         dataset_trajs = dataset_trajectories_list[dataset_idx]
@@ -193,7 +193,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         if dataset_nm in plot_settings['datasets_titles']:
             ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
-            if plot_traj_per_dataset:
+            if plot_traj_per_alg:
                 fig_i = plt.figure(figsize=(6, 5.5))
                 ax_i = fig_i.add_subplot(111, aspect='equal',
                                          xlabel='x [m]', ylabel='y [m]')
@@ -228,7 +228,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
         if dataset_nm in plot_settings['datasets_titles']:
             ax.set_title(plot_settings['datasets_titles'][dataset_nm])
         for alg in algorithm_names:
-            if plot_traj_per_dataset:
+            if plot_traj_per_alg:
                 fig_i = plt.figure(figsize=(6, 5.5))
                 ax_i = fig_i.add_subplot(111, aspect='equal',
                                          xlabel='x [m]', ylabel='y [m]')
@@ -375,9 +375,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '--mul_trials', type=int,
         help='number of trials, None for single run', default=None)
-
     parser.add_argument('--no_sort_names', action='store_false', dest='sort_names',
                         help='whether to sort dataset and algorithm names')
+
+    # odometry error
     parser.add_argument(
         '--odometry_error_per_dataset',
         help="Analyze odometry error for individual dataset. "
@@ -387,33 +388,41 @@ if __name__ == '__main__':
     parser.add_argument(
         '--overall_odometry_error',
         help="Collect the odometry error from all datasets and calculate statistics.",
+        dest='overall_odometry_error',
         action='store_true')
+
+    # RMSE (ATE)
     parser.add_argument(
         '--rmse_table', help='Output rms erros into latex tables',
         action='store_true')
     parser.add_argument(
         '--rmse_table_median_only', action='store_true', dest='rmse_median_only')
+    parser.add_argument('--rmse_boxplot',
+                        help='Plot the trajectories', action='store_true')
+
     parser.add_argument('--write_time_statistics', help='write time statistics',
                         action='store_true')
+
+    # plot trajectories
     parser.add_argument('--plot_trajectories',
                         help='Plot the trajectories', action='store_true')
     parser.add_argument('--no_plot_side', action='store_false', dest='plot_side')
     parser.add_argument('--no_plot_aligned', action='store_false', dest='plot_aligned')
-    parser.add_argument('--no_plot_traj_per_dataset', action='store_false',
-                        dest='plot_traj_per_dataset')
-    parser.add_argument('--rmse_boxplot',
-                        help='Plot the trajectories', action='store_true')
+    parser.add_argument('--no_plot_traj_per_alg', action='store_false',
+                        dest='plot_traj_per_alg')
+
     parser.add_argument('--recalculate_errors',
                         help='Deletes cached errors', action='store_true')
     parser.add_argument('--png',
                         help='Save plots as png instead of pdf',
                         action='store_true')
     parser.add_argument('--dpi', type=int, default=300)
-    parser.set_defaults(odometry_error_per_dataset=False, rmse_table=False,
+    parser.set_defaults(odometry_error_per_dataset=False, overall_odometry_error=False,
+                        rmse_table=False,
                         plot_trajectories=False, rmse_boxplot=False,
                         recalculate_errors=False, png=False, time_statistics=False,
                         sort_names=True, plot_side=True, plot_aligned=True,
-                        plot_traj_per_dataset=True, rmse_median_only=False)
+                        plot_traj_per_alg=True, rmse_median_only=False)
     args = parser.parse_args()
     print("Arguments:\n{}".format(
         '\n'.join(['- {}: {}'.format(k, v)
@@ -614,7 +623,7 @@ if __name__ == '__main__':
         plot_trajectories(dataset_trajectories_list, datasets, algorithms,
                           datasets_res_dir, plot_settings, plot_side=args.plot_side,
                           plot_aligned=args.plot_aligned,
-                          plot_traj_per_dataset=args.plot_traj_per_dataset)
+                          plot_traj_per_alg=args.plot_traj_per_alg)
 
     if args.write_time_statistics:
         dataset_alg_t_stats = []
