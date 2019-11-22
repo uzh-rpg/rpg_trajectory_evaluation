@@ -314,7 +314,7 @@ def plot_overall_odometry_errors(odo_err_col, algorithm_names, rel_e_distances,
 
 def parse_config_file(config_fn, sort_names):
     with open(config_fn) as f:
-        d = yaml.load(f)
+        d = yaml.load(f, Loader=yaml.FullLoader)
     assert type(d['Datasets']) is dict
     datasets = d['Datasets'].keys()
     if sort_names:

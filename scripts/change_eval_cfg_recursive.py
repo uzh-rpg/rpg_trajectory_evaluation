@@ -23,7 +23,7 @@ if __name__ == '__main__':
             eval_cfg_fn = os.path.join(dirpath, 'eval_cfg.yaml')
             print('- Process {}...'.format(eval_cfg_fn))
             with open(eval_cfg_fn, 'r') as f:
-                eval_cfg = yaml.load(f)
+                eval_cfg = yaml.load(f, Loader=yaml.FullLoader)
                 print("  {} -> {}".format(eval_cfg['align_type'], args.align_type))
                 print("  {} -> {}".format(eval_cfg['align_num_frames'], args.align_n))
                 eval_cfg['align_type'] = args.align_type

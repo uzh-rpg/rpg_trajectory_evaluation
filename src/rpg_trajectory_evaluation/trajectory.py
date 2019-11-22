@@ -22,6 +22,7 @@ class Trajectory:
     rel_error_prefix = 'relative_error_statistics_'
     saved_res_dir_nm = 'saved_results'
     cache_res_dir_nm = 'cached'
+    default_boxplot_perc = [0.1, 0.2, 0.3, 0.4, 0.5]
 
     def __init__(self, results_dir, platform='', alg_name='', dataset_name='',
                  align_type='sim3', align_num_frames=-1, suffix='',
@@ -30,7 +31,7 @@ class Trajectory:
                  nm_est='stamped_traj_estimate.txt',
                  nm_matches='stamped_est_gt_matches.txt',
                  preset_boxplot_distances=[],
-                 preset_boxplot_percentages=[0.1, 0.2, 0.3, 0.4, 0.5]):
+                 preset_boxplot_percentages=[]):
 
         assert os.path.exists(results_dir),\
             "Specified directory {0} does not exist.".format(results_dir)
@@ -68,7 +69,7 @@ class Trajectory:
         if os.path.exists(self.eval_cfg):
             print("Find evaluation configuration, will overwrite default.")
             with open(self.eval_cfg, 'r') as f:
-                eval_cfg = yaml.load(f)
+                eval_cfg = yaml.load(f, Loader=yaml.FullLoader)
                 print("The current evaluation configuration is "
                       "{0}".format(eval_cfg))
                 self.align_type = eval_cfg['align_type']
@@ -81,7 +82,7 @@ class Trajectory:
         if os.path.exists(self.start_end_time_fn):
             print("Find start end time for evaluation.")
             with open(self.start_end_time_fn, 'r') as f:
-                d = yaml.load(f)
+                d = yaml.load(f, Loader=yaml.FullLoader)
                 if 'start_time_sec' in d:
                     self.start_time_sec = d['start_time_sec']
                 if 'end_time_sec' in d:
@@ -108,6 +109,9 @@ class Trajectory:
             print("Use preset boxplot distances.")
             self.preset_boxplot_distances = preset_boxplot_distances
         else:
+            if not self.boxplot_pcts:
+                self.boxplot_pcts = Trajectory.default_boxplot_perc
+            print("Use percentages {} for boxplot.".format(self.boxplot_pcts))
             self.compute_boxplot_distances()
 
         self.align_trajectory()
