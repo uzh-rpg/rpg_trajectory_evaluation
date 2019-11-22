@@ -4,8 +4,10 @@ This repository implements common used trajectory evaluation methods for visual(
 * Different trajectory alignment methods (rigid-body, similarity and yaw-only rotation)
 * Commonly used error metrics: Absolute Trajectory Error (ATE) and Relative/Odometry Error (RE)
 
+> The relative error is implemented in the same way as in [KITTI](http://www.cvlibs.net/publications/Geiger2012CVPR.pdf) since it is the most widely used version.
+
 Since trajectory evaluation involves many details, the toolbox is designed for easy use.
-It can be used to analyze a [single trajectory estimate](#single-trajectory-estimate), as well as [compare different algorithms on many datasets](#multiple-trajectory-estimates) (e.g., [this paper](http://rpg.ifi.uzh.ch/docs/ICRA18_Delmerico.pdf)) with one command.
+It can be used to analyze a [single trajectory estimate](#single-trajectory-estimate), as well as [compare different algorithms on many datasets](#multiple-trajectory-estimates) (e.g., [this paper](http://rpg.ifi.uzh.ch/docs/ICRA18_Delmerico.pdf) and used in [IROS 2019 VIO competition](http://rpg.ifi.uzh.ch/uzh-fpv.html)) with one command.
 The user only needs to provide the groundtruths and estimates of desired format and specify the trajectory alignment method.
 The toolbox generates (almost) paper-ready plots and tables.
 In addition, the evaluation can be easily [customized](#customization).
@@ -22,7 +24,6 @@ Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluatio
   year = {2018}
 }
 ```
-
 
 1. [Install](#install)
 2. [Prepare the Data](#prepare-the-data)
