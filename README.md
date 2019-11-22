@@ -26,10 +26,15 @@ Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluatio
 
 1. [Install](#install)
 2. [Prepare the Data](#prepare-the-data)
+   * [Poses](#poses)
+   * [Evaluation Parameters](#evaluation-parameters)
+   * [Start and end times](#start-and-end-times)
 3. [Run the Evaluation](#run-the-evaluation)
    * [Single Trajectory Estimate](#single-trajectory-estimate)
    * [Multiple Trajectory Estimate](#multiple-trajectory-estimates)
-4. [Dataset Tools](#dataset-tools)
+4. [Utilities](#utilities)
+   * [Dataset Tools](#dataset-tools)
+   * [Misc. Scripts](#misc-scripts)
 5. [Customization: `Trajectory` class](#customization)
 6. [Credits](#credits)
 
@@ -61,7 +66,7 @@ You can see the folders under `results` for examples.
 These files contains **all the essential information** to reproduce quantitative trajectory evaluation results with the toolbox.
 
 #### Poses
-The groundtruth and estimated poses are specified in the following format
+The groundtruth (`stamped_groundtruth.txt`) and estimated poses (`stamped_traj_estimate.txt`) are specified in the following format
 
 ```
 # timestamp tx ty tz qx qy qz qw
@@ -86,9 +91,13 @@ Currently `eval_cfg.yaml` specifies two parameters for trajectory alignment (use
 
 **If this file does not exist, trajectory alignment will be done using `sim3` and all the poses.**
 
+#### Start and end times
+
 `start_end_time.yaml` can specify the following (according to groundtruth time):
 * `start_time_sec`: only poses after this time will be used for analysis
 * `end_time_sec`: only poses before this time will be used for analysis
+
+**If this file does not exist, analysis be done for all the poses in `stamped_traj_estimate.txt`.**
 
 
 ## Run the Evaluation
@@ -227,11 +236,9 @@ will analyze the following folders
 ##### Specifying sub-trajectory lengths for relative pose errors
 The relative pose error is calculated from subtrajectories of different lengths, which can be specified by the following fields in the configuration file
 * `RelDistances`: a set of lengths that will be used for all the datasets
-* `RelDistancePercentages`: the lengths will be selected independently as certain percentages of the total length for each dataset. **This will be overwritten by `RelDistance`**.
+* `RelDistancePercentages`: the lengths will be selected independently as certain percentages of the total length for each dataset. **This will be overwritten by `RelDistances`**.
 If none of the above is specified, the default percentages (see `src/trajectory.py`) will be used.
 
-Note that if a set of consistent sub-trajectory lengths is desired (e.g., KITTI style analysis)
-one should set the `RelDistances` in the evaluation configuration.
 
 #### Output
 The evaluation process will generate the `saved_results` folder in each result folder,
@@ -260,21 +267,37 @@ Paths:
 
 Analysis options:
 * `--mul_trials`: how many trials we want to analyze. Default: `None`. If some algorithm-dataset configuration has less runs, only the available ones will be considered.
+
 * `--odometry_error_per_dataset`: whether to compute the relative error for each dataset. Default: `False`.
+* `--overall_odometry_error`: whether to compute and compare the overall odometry error on all datasets for different algorithms. Default: `False`.
+
 * `--rmse_table`: whether to generate the table of translation RMSE (absolute error). Default: `False`.
-* `--plot_trajectories`: whether to plot trajectories. Default: `False`.
-* `--rmse_boxplot`: whether to plot boxplot for RMSE of different datasets. Default: `False`.
+  * `--rmse_table_median_only`: per default, the `--rmse_table` option saves median/mean/min/max of multiple runs. Use this option to only save the median.
+  * `--rmse_boxplot`: whether to plot boxplot for RMSE of different datasets (only valid for analysing results from multiple trials). Default: `False`.
+
+* `--plot_trajectories`: whether to plot trajectories. Default: `False`. By default, many plots are generated, and some of them can be turned off by the following options.
+  * `--no_plot_side`: do not plot side views
+  * `--no_plot_aligned`: do not plot the alignment connection between the groundtruth and estimate
+  * `--no_plot_traj_per_alg`: do not generate plots for each algorithm
 
 Misc:
 * `--recalculate_errors:` whether to clear the cache and recalculate everything. Default: `False`.
 * `--png`: save plots as png instead of pdf. Default: `False`
+* `--dpi`: allow saving at a higher dpi. Default: 300
 * `--no_sort_names`: do not sort the names of datasets and algorithms (using the order in the configuration file) when plotting/writing the results. Default: names will be sorted.
 
-## Dataset tools
+## Utilities
+
+### Dataset tools
 Under `scripts/dataset_tools`, we provide several scripts to prepare your dataset for analysis. Specifically:
 * `asl_groundtruth_to_pose.py`: convert EuRoC style format to the format used in this toolbox.
 * `bag_to_pose.py`: extract `PoseStamped`/`PoseWithCovarianceStamped` in a ROS bag to the desired format.
 * `transform_trajectory.py`: transformed a pose file of our format by a given transformation, useful for applying hand-eye calibration to groundtruth/estimate before analysis.
+
+### Misc scripts
+Under `scripts`, there are also some scripts for conveniece:
+* `recursive_clean_results_dir.py`: remove all `saved_results` directories recursively.
+* `change_eval_cfg_recursive.py`: recursively changing the evaluation parameter within a given result folder.
 
 ## Customization
 Most of the error computing is done via the class `Trajectory` (`src/rpg_trajectory_evaluation/trajectory.py`).
