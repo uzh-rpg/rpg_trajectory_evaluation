@@ -244,10 +244,9 @@ If none of the above is specified, the default percentages (see `src/trajectory.
 The evaluation process will generate the `saved_results` folder in each result folder,
 same as the evaluation for single trajectory estimate.
 In addition, it will generate plots and text files under `results` folder comparing different algorithms:
-* `<dataset>_trajectory_side/top.pdf`: plots of the aligned trajectories of different algorithms on `<dataset>`, along with the groundtruth.
-* `<dataset>_trans_yaw_error.pdf`: plots of the relative translation and yaw error of different algorithms on `<dataset>`.
+* Under `<platform>_<dataset>_results` folder you can find the trajectory top/side views and the boxplots of the relative pose errors on this dataset.
 * `all_translation/rotation_rmse.pdf`: boxplots of the RMSE of multiple runs for all datasets.
-* `<platform>_translation_rmse<algorithm_dataset_string>.txt`: `Latex` table summarizing the RMSE of all configurations. `<algorithm_dataset_string>` is an identifier generated from the algorithms and datasets evaluated.
+* `<platform>_translation_rmse<algorithm_dataset_string>.txt`: `Latex` table summarizing the RMSE of all configurations. `<algorithm_dataset_string>` is an identifier generated from the algorithms and datasets evaluated. The values in the table are formated as `mean, median (min, max)` from the errors of multiple trials.
 
 The tables can be readily used in `Latex` files.
 
