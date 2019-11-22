@@ -40,7 +40,11 @@ The package can be used as a ROS package as well as a standalone tool.
 To use it as a ROS package, simply clone it into your workspace.
 It only depends on [`catkin_simple`](https://github.com/catkin/catkin_simple) to build.
 
-**Dependencies**: You will need `numpy` and `matplotlib` for the analysis/plotting. You should also install `colorama` for colored console output.
+**Dependencies**: You will need install the following:
+
+* `numpy` and `matplotlib` for the analysis/plotting
+* `colorama` for colored console output
+* `ruamel.yaml` for [preserving the order in yaml configurations](https://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts)
 
 ## Prepare the Data
 Each trajectory estimate (e.g., output of a visual-inertial odometry algorithm) to evaluate is organized as a self-contained folder.
@@ -116,7 +120,11 @@ After the evaluation is done, you will find two folders under `<result_folder>`:
 
 For multiple trials, the result for trial `n` will have the corresponding suffix, and the statistics of multiple trials will be summarized in files with the name `mt_*`.
 
-Several example plots showing the trajectory, absolute trajectory error and relative error are
+As an example, after executing:
+```
+python2 scripts/analyze_trajectory_single.py results/euroc_mono_stereo/laptop/vio_mono/laptop_vio_mono_MH_05
+```
+you will find the following in `plots`:
 
 ![top_traj](./doc/mh05_top_vio_mono.png)
 ![abs_err](./doc/mh05_trans_err_vio_mono.png)
@@ -137,17 +145,17 @@ The mapping from the `est_type` to file names (i.e., `stamped_*.txt`) is defined
 
 ### Multiple trajectory estimates
 
-For ROS, run
+Similar to the case of single trajectory evaluation, for ROS, run
 
 ```
 rosrun rpg_trajectory_evaluation analyze_trajectories.py \
-  euroc_vislam_mono.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
+  euroc_vislam_mono.yaml --output_dir=./results/euroc_vislam_mono --results_dir=./results/euroc_vislam_mono --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 otherwise, run
 
 ```
-python2 analyze_trajectories.py \
-  euroc_vislam_mono.yaml --output_dir=./ --results_dir=./ --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
+python2 scripts/analyze_trajectories.py \
+  euroc_vislam_mono.yaml --output_dir=./results/euroc_vislam_mono --results_dir=./results/euroc_vislam_mono --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 
 These commands will look for `<platform>` folder under `results_dir` and analyze the algorithms and datasets combinations specified in `analyze_trajectories.py`, as described below.
@@ -170,7 +178,7 @@ The datasets under `results` are organized as
 
 Each sub-folder is of the same format as mentioned above.
 You need to specify the algorithms and datasets to analyze for the script `analyze_trajectories.py`.
-We use a configuration file under `scripts/analyze_trajectories_config` to sepcify the details. For example, in `euroc_vio_mono_stereo`
+We use a configuration file under `scripts/analyze_trajectories_config` to sepcify the details. For example, in `euroc_vio_mono_stereo.yaml`
 
 ```
 Datasets:
@@ -193,8 +201,8 @@ Algorithms:
   vio_stereo: 
     fn: traj_est
     label: vio_stereo
-RelDistances: []    ---> list of distances that will be used for calculating relative errors
-                         empty list means the distances will be computed from trajectory lengths
+RelDistances: []   ---> used to specify the sub-trajectory lengths in the relative error, see below.
+RelDistancePercentages: []
 ```
 
 will analyze the following folders
@@ -216,6 +224,12 @@ will analyze the following folders
     └── laptop_vio_stereo_V2_03
 ```
 
+##### Specifying sub-trajectory lengths for relative pose errors
+The relative pose error is calculated from subtrajectories of different lengths, which can be specified by the following fields in the configuration file
+* `RelDistances`: a set of lengths that will be used for all the datasets
+* `RelDistancePercentages`: the lengths will be selected independently as certain percentages of the total length for each dataset. **This will be overwritten by `RelDistance`**.
+If none of the above is specified, the default percentages (see `src/trajectory.py`) will be used.
+
 Note that if a set of consistent sub-trajectory lengths is desired (e.g., KITTI style analysis)
 one should set the `RelDistances` in the evaluation configuration.
 
@@ -226,7 +240,7 @@ In addition, it will generate plots and text files under `results` folder compar
 * `<dataset>_trajectory_side/top.pdf`: plots of the aligned trajectories of different algorithms on `<dataset>`, along with the groundtruth.
 * `<dataset>_trans_yaw_error.pdf`: plots of the relative translation and yaw error of different algorithms on `<dataset>`.
 * `all_translation/rotation_rmse.pdf`: boxplots of the RMSE of multiple runs for all datasets.
-* `<platform>_translation_rmse<algorithm_dataset_string>.txt`: `Latex` table summarizing the RMSE of all configurations. `<algorithm_dataset_string>` is an indentifier generated from the algorithms and datasets evaluated.
+* `<platform>_translation_rmse<algorithm_dataset_string>.txt`: `Latex` table summarizing the RMSE of all configurations. `<algorithm_dataset_string>` is an identifier generated from the algorithms and datasets evaluated.
 
 The tables can be readily used in `Latex` files.
 
@@ -236,7 +250,8 @@ Several example plots (from `analyze_trajectories_config/euroc_vislam_mono.yaml`
 ![overall_rel_err_mh03](./doc/MH_03_trans_yaw_error.png)
 
 #### Parameters
-Configuration: `config` configuration file under `scripts/analyze_trajectories_config`
+Configuration:
+* `config` configuration file under `scripts/analyze_trajectories_config`
 
 Paths:
 * `--results_dir`: the folder where the `<platform>` folder will be found. Default: `results` folder in the toolbox folder.
@@ -251,8 +266,9 @@ Analysis options:
 * `--rmse_boxplot`: whether to plot boxplot for RMSE of different datasets. Default: `False`.
 
 Misc:
-* `--recalculate_errors:` whether to clear the cache and recalculate everything. Default: False.
+* `--recalculate_errors:` whether to clear the cache and recalculate everything. Default: `False`.
 * `--png`: save plots as png instead of pdf. Default: `False`
+* `--no_sort_names`: do not sort the names of datasets and algorithms (using the order in the configuration file) when plotting/writing the results. Default: names will be sorted.
 
 ## Dataset tools
 Under `scripts/dataset_tools`, we provide several scripts to prepare your dataset for analysis. Specifically:
