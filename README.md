@@ -50,7 +50,7 @@ It only depends on [`catkin_simple`](https://github.com/catkin/catkin_simple) to
 
 * `numpy` and `matplotlib` for the analysis/plotting
 * `colorama` for colored console output
-* `ruamel.yaml` for [preserving the order in yaml configurations](https://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts)
+* `ruamel.yaml` ([install](https://pypi.org/project/ruamel.yaml/)) for [preserving the order in yaml configurations](https://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts)
 
 ## Prepare the Data
 Each trajectory estimate (e.g., output of a visual-inertial odometry algorithm) to evaluate is organized as a self-contained folder.
