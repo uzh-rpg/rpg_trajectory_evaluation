@@ -2,7 +2,7 @@
 
 import os
 import argparse
-import yaml
+from ruamel.yaml import YAML
 import shutil
 import json
 from datetime import datetime
@@ -313,9 +313,9 @@ def plot_overall_odometry_errors(odo_err_col, algorithm_names, rel_e_distances,
 
 
 def parse_config_file(config_fn, sort_names):
+    yaml = YAML()
     with open(config_fn) as f:
-        d = yaml.load(f, Loader=yaml.FullLoader)
-    assert type(d['Datasets']) is dict
+        d = yaml.load(f)
     datasets = d['Datasets'].keys()
     if sort_names:
         datasets.sort()
@@ -326,7 +326,6 @@ def parse_config_file(config_fn, sort_names):
         if 'title' in d['Datasets'][v]:
             datasets_titles[v] = d['Datasets'][v]['title']
 
-    assert type(d['Algorithms']) is dict
     algorithms = d['Algorithms'].keys()
     if sort_names:
         algorithms.sort()

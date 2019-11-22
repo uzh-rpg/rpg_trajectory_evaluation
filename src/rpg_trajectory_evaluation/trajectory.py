@@ -142,8 +142,9 @@ class Trajectory:
         if self.p_es.size == 0:
             print(Fore.RED+"Empty estimate file.")
             return False
-        self.accum_distances = traj_utils.get_distance_from_start(self.p_gt)
+        self.accum_distances = traj_utils.get_distance_from_start(self.p_gt_raw)
         self.traj_length = self.accum_distances[-1]
+        self.accum_distances = traj_utils.get_distance_from_start(self.p_gt)
 
         if os.path.isfile(self.cached_rel_err_fn):
             print('Loading cached relative (odometry) errors from ' +
