@@ -26,8 +26,19 @@ rc('text', usetex=True)
 
 FORMAT = '.pdf'
 
-PALLETE = ['b', 'g', 'r', 'c', 'k', 'y', 'm']
-
+PALLETE = [
+    'black',         # black
+    'grey',          # grey
+    'maroon',        # brown
+    'firebrick',     # red
+    'darkorange',    # orange
+    'gold',          # yellow
+    'limegreen',     # green
+    'lightseagreen', # turqouise
+    'lightskyblue',  # lightblue
+    'mediumblue' ,   # blue
+    'rebeccapurple'  # purple
+    ]
 
 def collect_odometry_error_per_dataset(dataset_multierror_list,
                                        dataset_names):
