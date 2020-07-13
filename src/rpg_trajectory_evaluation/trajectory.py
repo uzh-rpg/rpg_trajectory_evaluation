@@ -69,7 +69,7 @@ class Trajectory:
         if os.path.exists(self.eval_cfg):
             print("Find evaluation configuration, will overwrite default.")
             with open(self.eval_cfg, 'r') as f:
-                eval_cfg = yaml.load(f, Loader=yaml.FullLoader)
+                eval_cfg = yaml.load(f)
                 print("The current evaluation configuration is "
                       "{0}".format(eval_cfg))
                 self.align_type = eval_cfg['align_type']
@@ -82,7 +82,7 @@ class Trajectory:
         if os.path.exists(self.start_end_time_fn):
             print("Find start end time for evaluation.")
             with open(self.start_end_time_fn, 'r') as f:
-                d = yaml.load(f, Loader=yaml.FullLoader)
+                d = yaml.load(f)
                 if 'start_time_sec' in d:
                     self.start_time_sec = d['start_time_sec']
                 if 'end_time_sec' in d:
@@ -160,7 +160,7 @@ class Trajectory:
 
     def cache_current_error(self):
         if self.rel_errors:
-            with open(self.cached_rel_err_fn, 'w') as f:
+            with open(self.cached_rel_err_fn, 'wb') as f:
                 pickle.dump(self.rel_errors, f)
             print(Fore.YELLOW + "Saved relative error to {0}.".format(
                 self.cached_rel_err_fn))

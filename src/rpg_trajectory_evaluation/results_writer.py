@@ -30,7 +30,7 @@ def compute_statistics(data_vec):
 def update_and_save_stats(new_stats, label, yaml_filename):
     stats = dict()
     if os.path.exists(yaml_filename):
-        stats = yaml.load(open(yaml_filename, 'r'), Loader=yaml.FullLoader)
+        stats = yaml.load(open(yaml_filename, 'r'))
     stats[label] = new_stats
 
     with open(yaml_filename, 'w') as outfile:

@@ -8,6 +8,8 @@ import json
 from datetime import datetime
 
 import numpy as np
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib import rc
 from colorama import init, Fore

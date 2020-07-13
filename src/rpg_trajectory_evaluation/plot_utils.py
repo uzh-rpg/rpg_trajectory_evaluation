@@ -6,8 +6,9 @@
 import os
 import yaml
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+mpl.use('pdf')
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})

@@ -4,9 +4,10 @@ import os
 import argparse
 
 import numpy as np
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib import rc
-import matplotlib
 from colorama import init, Fore
 
 import add_path
@@ -71,7 +72,7 @@ def analyze_multiple_trials(results_dir, est_type, n_trials,
     return traj_list, mt_error
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description='''Analyze trajectory estimate in a folder.''')
     parser.add_argument(
@@ -126,6 +127,8 @@ if __name__ == '__main__':
         plots_dirs.append(plot_dir_i)
     if args.png:
         FORMAT = '.png'
+    else:
+        FORMAT = '.pdf'
 
     print(Fore.YELLOW + "=== Summary ===")
     print(Fore.YELLOW +
@@ -157,6 +160,7 @@ if __name__ == '__main__':
             plot_traj = traj_list[args.mul_plot_idx[0]]
         else:
             print("No success runs, not plotting.")
+            exit(1)
 
         if n_trials > 1:
             print(">>> Save results for multiple runs in {0}...".format(
@@ -306,3 +310,5 @@ if __name__ == '__main__':
     s.call(['notify-send', 'rpg_trajectory_evaluation finished',
             'results in: {0}'.format(os.path.abspath(args.result_dir))])
 
+if __name__ == "__main__":
+    main()

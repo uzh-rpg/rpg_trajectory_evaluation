@@ -2,6 +2,8 @@
 
 import os
 import numpy as np
+import matplotlib as mpl
+mpl.use('pdf')
 import matplotlib.pyplot as plt
 
 import add_path
@@ -158,3 +160,4 @@ def plot_overall_odometry_errors(overall_err, output_dir):
     fig.savefig(output_dir+'/overall_rel_yaw_error'+FORMAT,
                 bbox_inches="tight")
     plt.close(fig)
+
