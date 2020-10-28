@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+import IPython
+import matplotlib.pyplot as plt
 import os
 import numpy as np
 
@@ -25,6 +27,7 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
 
     T_mc = np.linalg.inv(T_cm)
     errors = []
+    # IPython.embed()
     for idx, c in enumerate(comparisons):
         if not c == -1:
             T_c1 = tu.get_rigid_body_trafo(q_es[idx, :], p_es[idx, :])
@@ -43,6 +46,32 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
             T_error_in_w = np.dot(T_c2_rot, np.dot(
                 T_error_in_c2, np.linalg.inv(T_c2_rot)))
             errors.append(T_error_in_w)
+            
+            plt.figure(0, figsize=(10, 5))
+            plt.clf()
+            ax1 = plt.subplot(1, 2, 1)
+            ax1.plot(p_es[:, 0], p_es[:, 1])
+            ax1.plot(p_gt[:, 0], p_gt[:, 1])
+            ax1.plot(p_es[idx, 0], p_es[idx, 1], 'rx')
+            ax1.plot(p_es[c, 0], p_es[c, 1], 'rx')
+            ax1.plot(p_gt[idx, 0], p_gt[idx, 1], 'rx')
+            ax1.plot(p_gt[c, 0], p_gt[c, 1], 'rx')
+            ax1.set_aspect('equal')
+
+            
+            ax2 = plt.subplot(1, 2, 2)
+            gt_portion = p_gt[idx:c, :]
+            gt_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], gt_portion.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
+            es_portion = p_es[idx:c, :]
+            es_al0 = np.dot(np.linalg.inv(T_c1)[:3, :3], es_portion.T) + np.linalg.inv(T_c1)[:3, 3].reshape([3, 1])
+            ax2.plot(es_al0[0, :], es_al0[1, :], label='es')
+            ax2.plot(gt_al0[0, :], gt_al0[1, :], label='gt')
+            ax2.axis([-10, 10, -10, 10])
+            ax2.set_aspect('equal')
+            plt.legend()
+            plt.savefig('debug/%04d.png' % idx)
+
+    #IPython.embed()
 
     error_trans_norm = []
     error_trans_perc = []
@@ -60,6 +89,7 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
         error_gravity.append(
             np.sqrt(ypr_angles[1]**2+ypr_angles[2]**2)*180.0/np.pi)
         e_rot_deg_per_m.append(e_rot[-1] / dist)
+    IPython.embed()
     return errors, np.array(error_trans_norm), np.array(error_trans_perc),\
         np.array(error_yaw), np.array(error_gravity), np.array(e_rot),\
         np.array(e_rot_deg_per_m)

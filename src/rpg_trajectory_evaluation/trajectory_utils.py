@@ -34,6 +34,9 @@ def compute_comparison_indices_length(distances, dist, max_dist_diff):
                 error = np.abs(distances[i] - (d+dist))
         if best_idx != -1:
             comparisons.append(best_idx)
+            print("%d to %d" % (idx, best_idx))
+        else:
+            print("No best match for index %d!" % idx)
     return comparisons
 
 
