@@ -432,6 +432,18 @@ if __name__ == '__main__':
           "in {1}".format(args.results_dir, args.output_dir))
     output_dir = args.output_dir
 
+    if not os.path.exists(output_dir):
+        print("Create output directory {}.".format(output_dir))
+        os.makedirs(output_dir)
+    else:
+        if not os.path.isdir(output_dir):
+            assert False, \
+                "File with the same name as output folder {} exists, ".format(output_dir) + \
+                "please remove it first."
+        else:
+            print(Fore.YELLOW + "Output folder exists, will use it directly without cleaning.")
+    assert os.path.exists(output_dir) and os.path.isdir(output_dir)
+
     config_fn = os.path.join(config_path, args.config)
 
     print("Parsing evaluation configuration {0}...".format(config_fn))
