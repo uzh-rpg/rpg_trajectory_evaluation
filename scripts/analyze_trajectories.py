@@ -440,11 +440,9 @@ if __name__ == '__main__':
         os.makedirs(cur_res_dir)
         datasets_res_dir[d] = cur_res_dir
     same_subtraj = True if rel_e_distances else False
-    assert len(PALLETE) > len(algorithms),\
-        "Not enough colors for all configurations"
     algo_colors = {}
     for i in range(len(algorithms)):
-        algo_colors[algorithms[i]] = PALLETE[i]
+        algo_colors[algorithms[i]] = PALLETE[i % len(PALLETE)]
 
     print(Fore.YELLOW+"=== Evaluation Configuration Summary ===")
     print(Fore.YELLOW+"Datasests to evaluate: ")
