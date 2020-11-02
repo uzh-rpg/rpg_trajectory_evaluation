@@ -66,7 +66,7 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
                 p_es_i_aligned = (np.dot(R_gt_es, p_es_i.T) + t_gt_es.reshape((3, 1))).T
                 T_error_dummy = np.eye(4)
                 e_trans_vec = p_gt_i - p_es_i_aligned
-                T_error_dummy[0, 3] = np.mean(np.sqrt(np.sum(e_trans_vec**2, 1)))
+                T_error_dummy[0, 3] = np.sqrt(np.mean(np.sum(e_trans_vec**2, 1)))
                 errors.append(T_error_dummy)
 
                 if debug:
@@ -77,25 +77,33 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
 
 
             if debug:
-                plt.figure(0, figsize=(10, 5))
+                plt.figure(0, figsize=(15, 5))
                 plt.clf()
-                ax1 = plt.subplot(1, 2, 1)
+                ax1 = plt.subplot(1, 3, 1)
                 ax1.plot(p_es[:, 0], p_es[:, 1])
                 ax1.plot(p_gt[:, 0], p_gt[:, 1])
                 ax1.plot(p_es[idx, 0], p_es[idx, 1], 'rx')
                 ax1.plot(p_es[c, 0], p_es[c, 1], 'rx')
                 ax1.plot(p_gt[idx, 0], p_gt[idx, 1], 'rx')
                 ax1.plot(p_gt[c, 0], p_gt[c, 1], 'rx')
+                ax1.set_title('Full traj., sample source')
                 ax1.set_aspect('equal')
 
                 
-                ax2 = plt.subplot(1, 2, 2)
+                ax2 = plt.subplot(1, 3, 2)
                 ax2.plot(es_al0[0, :], es_al0[1, :], label='es')
                 ax2.plot(gt_al0[0, :], gt_al0[1, :], label='gt')
-                ax2.axis([-dist, dist, -dist, dist])
+                # ax2.axis([-dist, dist, -dist, dist])
                 ax2.set_aspect('equal')
                 ax2.set_title('Error is %f m' % np.linalg.norm(errors[-1][:3, 3]))
                 plt.legend()
+
+                ax3 = plt.subplot(1, 3, 3)
+                x = range(len(comparisons))
+                y = [np.linalg.norm(e[0:3, 3]) for e in errors] + (len(comparisons) - len(errors)) * [None]
+                ax3.plot(x, y)
+                ax3.set_title('All errors')
+                
                 if not os.path.exists('debug'):
                     os.makedirs('debug')
                 plt.savefig('debug/%04d.png' % idx)
