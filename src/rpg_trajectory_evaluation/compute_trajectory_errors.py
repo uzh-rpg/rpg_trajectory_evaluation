@@ -12,7 +12,7 @@ import transformations as tf
 
 def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
                            accum_distances=[],
-                           scale=1.0, method='pos_yaw_align_use_n_pos', debug=True):
+                           scale=1.0, method='pos_yaw_align_use_n_pos', debug=False):
 
     if len(accum_distances) == 0:
         accum_distances = tu.get_distance_from_start(p_gt)
@@ -84,9 +84,13 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
             elif method == 'pos_yaw_align_use_n_pos':
                 # IPython.embed()
                 perc_pos_to_align = 0.1
-                num_pos_to_align = int(np.shape(p_es_i)[0] * perc_pos_to_align)
-
-                # print("---- num_pos_to_align = %d" % num_pos_to_align)
+                accum_distances_sub_traj = tu.get_distance_from_start(p_gt_i)
+                max_dist = perc_pos_to_align*accum_distances_sub_traj[-1]
+                num_pos_to_align = 0
+                for i, d in enumerate(accum_distances_sub_traj):
+                    if d > max_dist:
+                        num_pos_to_align = i
+                        break
 
                 p_es_i_to_align = p_es_i[0:num_pos_to_align, :]
                 p_gt_i_to_align = p_gt_i[0:num_pos_to_align, :]
