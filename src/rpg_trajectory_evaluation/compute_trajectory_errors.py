@@ -12,7 +12,7 @@ import transformations as tf
 
 def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
                            accum_distances=[],
-                           scale=1.0, method='pos_yaw_align', debug=False):
+                           scale=1.0, method='pos_yaw_align_use_n_pos', debug=True):
 
     if len(accum_distances) == 0:
         accum_distances = tu.get_distance_from_start(p_gt)
@@ -58,15 +58,22 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
                     gt_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], p_gt_i.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
                     es_al0 = np.dot(np.linalg.inv(T_c1)[:3, :3], p_es_i.T) + np.linalg.inv(T_c1)[:3, 3].reshape([3, 1])
                 
-            else:
-                assert method == 'pos_yaw_align'
+            elif method == 'pos_yaw_align':
                 # IPython.embed()
                 s, R_gt_es, t_gt_es = align_utils.alignTrajectory(p_es_i, p_gt_i, q_es_i, q_gt_i, method='posyaw')
                 assert s == 1.
                 p_es_i_aligned = (np.dot(R_gt_es, p_es_i.T) + t_gt_es.reshape((3, 1))).T
                 T_error_dummy = np.eye(4)
                 e_trans_vec = p_gt_i - p_es_i_aligned
+
+                a = np.sqrt(np.mean(np.sum(e_trans_vec**2, 1)))
+                print('a = %f' % a)
+
                 T_error_dummy[0, 3] = np.sqrt(np.mean(np.sum(e_trans_vec**2, 1)))
+                
+                print("T_error_dummy")
+                print(T_error_dummy)
+
                 errors.append(T_error_dummy)
 
                 if debug:
@@ -74,7 +81,36 @@ def compute_relative_error(p_es, q_es, p_gt, q_gt, T_cm, dist, max_dist_diff,
                     gt_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], p_gt_i.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
                     es_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], p_es_i_aligned.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
 
+            elif method == 'pos_yaw_align_use_n_pos':
+                # IPython.embed()
+                frac_pos_to_align = 0.1
+                accum_distances_sub_traj = tu.get_distance_from_start(p_gt_i)
+                max_dist = frac_pos_to_align*accum_distances_sub_traj[-1]
+                num_pos_to_align = 0
+                for i, d in enumerate(accum_distances_sub_traj):
+                    if d > max_dist:
+                        num_pos_to_align = i
+                        break
 
+                p_es_i_to_align = p_es_i[0:num_pos_to_align, :]
+                p_gt_i_to_align = p_gt_i[0:num_pos_to_align, :]
+                q_es_i_to_align = q_es_i[0:num_pos_to_align, :]
+                q_gt_i_to_align = q_gt_i[0:num_pos_to_align, :]
+                
+                s, R_gt_es, t_gt_es = align_utils.alignTrajectory(p_es_i_to_align, p_gt_i_to_align, 
+                    q_es_i_to_align, q_gt_i_to_align, method='posyaw')
+                assert s == 1.
+                p_es_i_aligned = (np.dot(R_gt_es, p_es_i.T) + t_gt_es.reshape((3, 1))).T
+                
+                T_error = np.eye(4)
+                e_trans_vec = p_gt_i[-1, :] - p_es_i_aligned[-1, :]
+                T_error[0:3, 3] = e_trans_vec
+                errors.append(T_error)
+
+                if debug:
+                    T_m1 = tu.get_rigid_body_trafo(q_gt[idx, :], p_gt[idx, :])
+                    gt_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], p_gt_i.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
+                    es_al0 = np.dot(np.linalg.inv(T_m1)[:3, :3], p_es_i_aligned.T) + np.linalg.inv(T_m1)[:3, 3].reshape([3, 1])
 
             if debug:
                 plt.figure(0, figsize=(15, 5))
