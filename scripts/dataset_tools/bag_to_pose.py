@@ -12,7 +12,8 @@ def extract(bagfile, pose_topic, msg_type, out_filename):
     f.write('# timestamp tx ty tz qx qy qz qw\n')
     with rosbag.Bag(bagfile, 'r') as bag:
         for (topic, msg, ts) in bag.read_messages(topics=str(pose_topic)):
-            if msg_type == "PoseWithCovarianceStamped":
+            if msg_type == "PoseWithCovarianceStamped" or \
+               msg_type == "Odometry":
                 f.write('%.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n' %
                         (msg.header.stamp.to_sec(),
                          msg.pose.pose.position.x, msg.pose.pose.position.y,
@@ -28,6 +29,14 @@ def extract(bagfile, pose_topic, msg_type, out_filename):
                          msg.pose.position.z,
                          msg.pose.orientation.x, msg.pose.orientation.y,
                          msg.pose.orientation.z, msg.pose.orientation.w))
+            elif msg_type == "TransformStamped":
+                f.write('%.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n' %
+                        (msg.header.stamp.to_sec(),
+                         msg.transform.translation.x,
+                         msg.transform.translation.y,
+                         msg.transform.translation.z,
+                         msg.transform.rotation.x, msg.transform.rotation.y,
+                         msg.transform.rotation.z, msg.transform.rotation.w))
             else:
                 assert False, "Unknown message type"
             n += 1
