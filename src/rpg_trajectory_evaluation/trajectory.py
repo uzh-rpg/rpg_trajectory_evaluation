@@ -2,6 +2,7 @@
 
 import os
 import yaml
+import math
 import pickle
 
 import numpy as np
@@ -104,7 +105,7 @@ class Trajectory:
             print(Fore.RED+"Loading data failed.")
             return
 
-        self.boxplot_pcts = preset_boxplot_percentages
+        self.boxplot_pcts = [0.2, 0.4, 0.6, 0.8, 1.0]#preset_boxplot_percentages
         if len(preset_boxplot_distances) != 0:
             print("Use preset boxplot distances.")
             self.preset_boxplot_distances = preset_boxplot_distances
@@ -149,7 +150,7 @@ class Trajectory:
         if os.path.isfile(self.cached_rel_err_fn):
             print('Loading cached relative (odometry) errors from ' +
                   self.cached_rel_err_fn)
-            with open(self.cached_rel_err_fn) as f:
+            with open(self.cached_rel_err_fn, "rb") as f:
                 self.rel_errors = pickle.load(f)
             print("Loaded odometry error calcualted at {0}".format(
                 self.rel_errors.keys()))
@@ -160,7 +161,7 @@ class Trajectory:
 
     def cache_current_error(self):
         if self.rel_errors:
-            with open(self.cached_rel_err_fn, 'w') as f:
+            with open(self.cached_rel_err_fn, 'wb') as f:
                 pickle.dump(self.rel_errors, f)
             print(Fore.YELLOW + "Saved relative error to {0}.".format(
                 self.cached_rel_err_fn))
@@ -199,11 +200,28 @@ class Trajectory:
                              est_type, base_fn)
         Trajectory._safe_remove_file(rm_fn)
 
+    @staticmethod
+    def truncate(number, decimals=0):
+        """
+        Returns a value truncated to a specific number of decimal places.
+        """
+        if not isinstance(decimals, int):
+            raise TypeError("decimal places must be an integer.")
+        elif decimals < 0:
+            raise ValueError("decimal places has to be 0 or more.")
+        elif decimals == 0:
+            return math.trunc(number)
+
+        factor = 10.0 ** decimals
+        return math.trunc(number * factor) / factor
+
+
     def compute_boxplot_distances(self):
         print("Computing preset subtrajectory lengths for relative errors...")
         print("Use percentage {0} of trajectory length.".format(self.boxplot_pcts))
-        self.preset_boxplot_distances = [np.floor(pct*self.traj_length)
-                                         for pct in self.boxplot_pcts]
+        print("Trajectory length {0}".format(self.traj_length))
+        self.preset_boxplot_distances = [self.truncate(pct*self.traj_length, 2)
+                                          for pct in self.boxplot_pcts]
 
         print("...done. Computed preset subtrajecory lengths:"
               " {0}".format(self.preset_boxplot_distances))

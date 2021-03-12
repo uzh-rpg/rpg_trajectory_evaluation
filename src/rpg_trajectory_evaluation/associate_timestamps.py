@@ -65,8 +65,8 @@ def associate(first_stamps, second_stamps, offset, max_difference):
                          if abs(a - (b + offset)) < max_difference]
     potential_matches.sort()  # prefer the closest
     matches = []
-    first_idxes = range(len(first_stamps))
-    second_idxes = range(len(second_stamps))
+    first_idxes = list(range(len(first_stamps)))
+    second_idxes = list(range(len(second_stamps)))
     for diff, idx_a, idx_b in potential_matches:
         if idx_a in first_idxes and idx_b in second_idxes:
             first_idxes.remove(idx_a)
