@@ -105,7 +105,7 @@ class Trajectory:
             print(Fore.RED+"Loading data failed.")
             return
 
-        self.boxplot_pcts = [0.2, 0.4, 0.6, 0.8, 1.0]#preset_boxplot_percentages
+        self.boxplot_pcts = preset_boxplot_percentages
         if len(preset_boxplot_distances) != 0:
             print("Use preset boxplot distances.")
             self.preset_boxplot_distances = preset_boxplot_distances
