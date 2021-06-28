@@ -8,6 +8,7 @@ import yaml
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.lines as mlines
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})
@@ -42,8 +43,8 @@ def boxplot_compare(ax, xlabels,
         # print("Positions: {0}".format(positions))
         bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
         color_box(bp, data_colors[idx])
-        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
-        leg_handles.append(tmp)
+        leg_line = mlines.Line2D([], [], color=data_colors[idx])
+        leg_handles.append(leg_line)
         leg_labels.append(data_labels[idx])
         idx += 1
 
