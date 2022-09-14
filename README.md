@@ -14,7 +14,7 @@ In addition, the evaluation can be easily [customized](#customization).
 
 If you use this code in an academic context, please cite the following paper:
 
-Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry, IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018.
+Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry, IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018. [PDF](https://rpg.ifi.uzh.ch/docs/IROS18_Zhang.pdf)
 
 ```
 @InProceedings{Zhang18iros,
