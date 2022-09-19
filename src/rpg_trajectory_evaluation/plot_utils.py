@@ -42,7 +42,7 @@ def boxplot_compare(ax, xlabels,
         # print("Positions: {0}".format(positions))
         bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
         color_box(bp, data_colors[idx])
-        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
+        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=1.0)
         leg_handles.append(tmp)
         leg_labels.append(data_labels[idx])
         idx += 1
