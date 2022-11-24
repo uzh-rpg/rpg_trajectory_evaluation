@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 
-kNsToEstFnMapping = {'traj_est': 'stamped_traj_estimate',
-                     'pose_graph': 'stamped_pose_graph_estimate',
+kNsToEstFnMapping = {'traj_est': 'vins_result_no_loop',
+                     'pose_graph': 'vins_result_loop',
                      'ba_estimate': 'stamped_ba_estimate'}
-kNsToMatchFnMapping = {'traj_est': 'stamped_est_gt_matches',
-                       'pose_graph': 'stamped_pg_gt_matches',
+kNsToMatchFnMapping = {'traj_est': 'vins_result_no_loop_gt_matches',
+                       'pose_graph': 'vins_result_loop_gt_matches',
                        'ba_estimate': 'stamped_ba_gt_matches'}
-kFnExt = 'txt'
+kFnExt = 'csv'

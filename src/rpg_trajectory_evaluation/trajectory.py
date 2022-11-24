@@ -28,9 +28,9 @@ class Trajectory:
     def __init__(self, results_dir, platform='', alg_name='', dataset_name='',
                  align_type='sim3', align_num_frames=-1, suffix='',
                  est_type='traj_est',
-                 nm_gt='stamped_groundtruth.txt',
-                 nm_est='stamped_traj_estimate.txt',
-                 nm_matches='stamped_est_gt_matches.txt',
+                 nm_gt='data.csv',
+                 nm_est='stamped_traj_estimate.csv',
+                 nm_matches='stamped_est_gt_matches.csv',
                  preset_boxplot_distances=[],
                  preset_boxplot_percentages=[]):
 

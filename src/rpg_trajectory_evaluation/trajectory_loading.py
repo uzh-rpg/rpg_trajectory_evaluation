@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import os
 import numpy as np
@@ -29,9 +29,11 @@ def load_estimate_and_associate(fn_gt,
 
     dict_matches = dict(matches)
 
-    data_es = np.loadtxt(fn_es)
+    data_es = np.loadtxt(fn_es, delimiter=",", dtype=float, usecols=range(9))
+
     if data_gt is None:
         data_gt = np.loadtxt(fn_gt)
+
     p_es = []
     p_gt = []
     q_es = []
@@ -67,7 +69,8 @@ def load_stamped_dataset(results_dir,
     read synchronized estimation and groundtruth and associate the timestamps
     '''
     fn_gt = os.path.join(results_dir, nm_gt)
-    data_gt = np.loadtxt(fn_gt)
+
+    data_gt = np.loadtxt(fn_gt, delimiter=",", dtype=float)
 
     fn_es = os.path.join(results_dir, nm_est)
     fn_matches = os.path.join(results_dir, nm_matches)
@@ -79,7 +82,9 @@ def load_stamped_dataset(results_dir,
 def load_raw_groundtruth(results_dir, nm_gt ='stamped_groundtruth.txt',
                          start_t_sec=-float('inf'), end_t_sec=float('inf')):
     fn_gt = os.path.join(results_dir, nm_gt)
-    data_gt = np.loadtxt(fn_gt)
+
+    data_gt = np.loadtxt(fn_gt, delimiter=",", dtype=float)
+
     t_gt = []
     p_gt = []
     q_gt = []
