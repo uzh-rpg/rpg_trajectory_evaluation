@@ -29,7 +29,7 @@ def load_estimate_and_associate(fn_gt,
 
     dict_matches = dict(matches)
 
-    data_es = np.loadtxt(fn_es, delimiter=",", dtype=float, usecols=range(9))
+    data_es = np.loadtxt(fn_es, delimiter=",", dtype=float, usecols=range(8))
 
     if data_gt is None:
         data_gt = np.loadtxt(fn_gt)
