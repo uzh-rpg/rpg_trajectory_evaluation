@@ -30,7 +30,7 @@ def spec(N):
     t = np.linspace(-510, 510, N)                                              
     return np.round(np.clip(np.stack([-t, 510-np.abs(t), t], axis=1), 0, 255)).astype("float32")/255
 
-PALLETE = spec(20)
+PALLETE = spec(5)
 
 
 def collect_odometry_error_per_dataset(dataset_multierror_list,
@@ -258,6 +258,42 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
                     '_trajectory_side'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
+def plot_cpu(dataset_trajectories_list, dataset_names, algorithm_names,
+                      datasets_out_dir, plot_settings, plot_idx=0):
+    
+    for dataset_idx, dataset_nm in enumerate(dataset_names):
+        output_dir = datasets_out_dir[dataset_nm]
+        dataset_trajs = dataset_trajectories_list[dataset_idx]
+        cpu_usage = [] 
+        for traj in dataset_trajs:
+            cpu_usage.append(traj[0].cpu_usage)
+
+        print("Plotting {0}...".format(dataset_nm))
+
+        colors = []
+        labels = []
+        for alg in algorithm_names:
+            colors.append(plot_settings['algo_colors'][alg])
+            labels.append(plot_settings['algo_labels'][alg])
+
+        # plot cpu usage
+        fig = plt.figure(figsize=(12, 3))
+        ax = fig.add_subplot(
+            111, xlabel='System Processes', ylabel="CPU Usage [\%]")
+        # if dataset_nm in plot_settings['datasets_titles']:
+        #     ax.set_title(plot_settings['datasets_titles'][dataset_nm])
+        
+        proc_names = cpu_usage[0].columns.values
+        pu.boxplot_compare_cpu(ax, proc_names, cpu_usage, 
+                            labels, colors)
+
+        # plt.sca(ax)
+        # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        fig.tight_layout()
+        fig.savefig(output_dir+'/'+dataset_nm +
+                    '_cpu_usage'+FORMAT, bbox_inches="tight", dpi=args.dpi)
+        plt.close(fig)
+
 
 def collect_odometry_error_per_algorithm(config_multierror_list, algorithms, distances,
                                          rel_keys=['rel_trans_perc', 'rel_rot_deg_per_m']):
@@ -412,6 +448,8 @@ if __name__ == '__main__':
     # plot trajectories
     parser.add_argument('--plot_trajectories',
                         help='Plot the trajectories', action='store_true')
+    parser.add_argument('--plot_system_logs',
+                        help='Plot the cpu and mem usage', action='store_true')
     parser.add_argument('--no_plot_side', action='store_false', dest='plot_side')
     parser.add_argument('--no_plot_aligned', action='store_false', dest='plot_aligned')
     parser.add_argument('--no_plot_traj_per_alg', action='store_false',
@@ -424,7 +462,7 @@ if __name__ == '__main__':
                         action='store_true')
     parser.add_argument('--dpi', type=int, default=300)
     parser.set_defaults(odometry_error_per_dataset=False, overall_odometry_error=False,
-                        rmse_table=False,
+                        rmse_table=False, plot_system_logs=False,
                         plot_trajectories=False, rmse_boxplot=False,
                         recalculate_errors=False, png=False, time_statistics=False,
                         sort_names=True, plot_side=True, plot_aligned=True,
@@ -630,6 +668,11 @@ if __name__ == '__main__':
                           datasets_res_dir, plot_settings, plot_side=args.plot_side,
                           plot_aligned=args.plot_aligned,
                           plot_traj_per_alg=args.plot_traj_per_alg)
+    
+    if args.plot_system_logs:
+        print(Fore.MAGENTA+'--- Plotting trajectory CPU and MEM usage ... ---')
+        plot_cpu(dataset_trajectories_list, datasets, algorithms,
+                          datasets_res_dir, plot_settings)
 
     if args.write_time_statistics:
         dataset_alg_t_stats = []

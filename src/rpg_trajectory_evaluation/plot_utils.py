@@ -58,11 +58,43 @@ def boxplot_compare(ax, xlabels,
     xlims = ax.get_xlim()
     ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
     if legend:
-        # ax.legend(leg_handles, leg_labels, bbox_to_anchor=(
-            # 1.05, 1), loc=2, borderaxespad=0.)
-        ax.legend(leg_handles, leg_labels)
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
     map(lambda x: x.set_visible(False), leg_handles)
 
+def boxplot_compare_cpu(ax, xlabels,
+                    data, data_labels, data_colors,
+                    legend=True):
+    n_data = len(data)
+    n_xlabel = len(xlabels)
+    leg_handles = []
+    leg_labels = []
+    idx = 0
+    for idx, d in enumerate(data):
+        # print("idx and d: {0} and {1}".format(idx, d))
+        w = 1 / (1.5 * n_data + 1.5)
+        widths = [w for pos in np.arange(n_xlabel)]
+        positions = [pos - 0.5 + 1.5 * w + idx * w
+                     for pos in np.arange(n_xlabel)]
+        # print("Positions: {0}".format(positions))
+        bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
+        color_box(bp, data_colors[idx])
+        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
+        leg_handles.append(tmp)
+        leg_labels.append(data_labels[idx])
+        idx += 1
+
+    ax.set_xticks(np.arange(n_xlabel))
+    ax.set_xticklabels(xlabels)
+    if legend:
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
+    map(lambda x: x.set_visible(False), leg_handles)
+
+def plot_mem_over_time(ax, mem_usages, color, name, alpha=1.0):
+    # TODO!
 
 def plot_trajectory_top(ax, pos, color, name, alpha=1.0):
     ax.grid(ls='--', color='0.7')

@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+import pandas as pd
 from colorama import init, Fore
 
 import trajectory_utils
@@ -100,4 +101,14 @@ def load_raw_groundtruth(results_dir, nm_gt ='stamped_groundtruth.txt',
 
     return t_gt, p_gt, q_gt
 
+def load_system_logs(results_dir,
+                    nm_file_cpu='log_cpu.csv',
+                    nm_file_mem='log_mem.csv'):
 
+    fn_cpu = os.path.join(results_dir, nm_file_cpu)
+    data_cpu = pd.read_csv(fn_cpu, delimiter=",", dtype=float, usecols=[1,2,3])
+
+    fn_mem = os.path.join(results_dir, nm_file_mem)
+    data_mem = np.loadtxt(fn_mem, delimiter=",", dtype=float, skiprows=1)
+
+    return data_cpu, data_mem

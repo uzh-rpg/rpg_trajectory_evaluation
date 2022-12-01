@@ -32,7 +32,9 @@ class Trajectory:
                  nm_est='stamped_traj_estimate.csv',
                  nm_matches='stamped_est_gt_matches.csv',
                  preset_boxplot_distances=[],
-                 preset_boxplot_percentages=[]):
+                 preset_boxplot_percentages=[],
+                 nm_cpu_log='log_cpu.csv',
+                 nm_mem_log='log_mem.csv'):
 
         assert os.path.exists(results_dir),\
             "Specified directory {0} does not exist.".format(results_dir)
@@ -100,7 +102,7 @@ class Trajectory:
             self.rel_error_cached_nm+self.suffix_str+".pickle")
 
         print("Loading {0} and {1}...".format(nm_gt, nm_est))
-        self.data_loaded = self.load_data(nm_gt, nm_est, nm_matches)
+        self.data_loaded = self.load_data(nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log)
         if not self.data_loaded:
             print(Fore.RED+"Loading data failed.")
             return
@@ -117,7 +119,7 @@ class Trajectory:
 
         self.align_trajectory()
 
-    def load_data(self, nm_gt, nm_est, nm_matches):
+    def load_data(self, nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log):
         """
         Loads the trajectory data. The resuls {p_es, q_es, p_gt, q_gt} is
         synchronized and has the same length.
@@ -155,6 +157,9 @@ class Trajectory:
             print("Loaded odometry error calcualted at {0}".format(
                 self.rel_errors.keys()))
 
+        # load system logs
+        self.cpu_usage, self.mem_usage =\
+            traj_loading.load_system_logs(self.data_dir, nm_cpu_log, nm_mem_log)
         print(Fore.GREEN+'...done.')
 
         return True
