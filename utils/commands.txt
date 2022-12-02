@@ -1,0 +1,1 @@
+python scripts/analyze_trajectories.py ~/git/eth/paul-joseph/Data/Testing_Configs/euroc_test.yaml --output_dir="./results/euroc_ofvins_mono" --results_dir="/home/paul/git/eth/paul-joseph/Data/Testing/EuRoC/" --odometry_error_per_dataset --overall_odometry_error --plot_trajectories --rmse_table --no_plot_aligned --no_plot_traj_per_alg --plot_system_logs
