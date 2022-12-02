@@ -111,4 +111,6 @@ def load_system_logs(results_dir,
     fn_mem = os.path.join(results_dir, nm_file_mem)
     data_mem = np.loadtxt(fn_mem, delimiter=",", dtype=float, skiprows=1)
 
-    return data_cpu, data_mem
+    proc_names = np.loadtxt(fn_mem, delimiter=",", dtype=str, max_rows=1)
+
+    return data_cpu, data_mem, proc_names

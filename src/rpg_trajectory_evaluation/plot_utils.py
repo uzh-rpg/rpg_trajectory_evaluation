@@ -93,8 +93,26 @@ def boxplot_compare_cpu(ax, xlabels,
             j.set_color(data_colors[i])
     map(lambda x: x.set_visible(False), leg_handles)
 
-def plot_mem_over_time(ax, mem_usages, color, name, alpha=1.0):
-    # TODO!
+def plot_mem_over_time_all(fig, mem_usages, proc_names, data_colors, data_labels, alpha=1.0):
+    proc_idx = 0
+    for proc_idx in range(len(proc_names)-1):
+        # create a new subplot
+        idx = 0
+        ax = fig.add_subplot(3,3,proc_idx+1)
+        for idx in range(len(mem_usages)):
+            plot_mem_over_time(ax, mem_usages[idx][:,0], mem_usages[idx][:,proc_idx+1], data_colors[idx], data_labels[idx])
+            # ax.plot(d[:,0], d[:,idx+1], color=data_colors[idx], label=data_labels[idx], marker='*')
+            idx += 1
+        proc_idx += 1
+
+ 
+def plot_mem_over_time(ax, timestamps, mem_usage, color, name, alpha=1.0):
+    print("timestamps: ", timestamps)
+    print("mem_usage: ", mem_usage)
+    print("color: ", color)
+    print("name: ", name)
+
+    ax.plot(timestamps, mem_usage, color=color, linestyle='-', alpha=alpha, label=name)
 
 def plot_trajectory_top(ax, pos, color, name, alpha=1.0):
     ax.grid(ls='--', color='0.7')

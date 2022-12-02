@@ -294,6 +294,35 @@ def plot_cpu(dataset_trajectories_list, dataset_names, algorithm_names,
                     '_cpu_usage'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
+def plot_mem(dataset_trajectories_list, dataset_names, algorithm_names,
+                      datasets_out_dir, plot_settings, plot_idx=0):
+    
+    for dataset_idx, dataset_nm in enumerate(dataset_names):
+        output_dir = datasets_out_dir[dataset_nm]
+        dataset_trajs = dataset_trajectories_list[dataset_idx]
+        mem_usage = []
+        proc_names = []
+        for traj in dataset_trajs:
+            mem_usage.append(traj[0].mem_usage)
+            proc_names.append(traj[0].process_names)
+
+        print("Plotting {0}...".format(dataset_nm))
+
+        colors = []
+        labels = []
+        for alg in algorithm_names:
+            colors.append(plot_settings['algo_colors'][alg])
+            labels.append(plot_settings['algo_labels'][alg])
+
+        # # plot mem usage
+        fig = plt.figure(figsize=(12, 3))
+        
+        pu.plot_mem_over_time_all(fig, mem_usage, proc_names, colors, labels)
+
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        fig.savefig(output_dir+'/'+dataset_nm +
+                    '_mem_usage'+FORMAT, bbox_inches="tight", dpi=args.dpi)
+        plt.close(fig)
 
 def collect_odometry_error_per_algorithm(config_multierror_list, algorithms, distances,
                                          rel_keys=['rel_trans_perc', 'rel_rot_deg_per_m']):
@@ -672,6 +701,8 @@ if __name__ == '__main__':
     if args.plot_system_logs:
         print(Fore.MAGENTA+'--- Plotting trajectory CPU and MEM usage ... ---')
         plot_cpu(dataset_trajectories_list, datasets, algorithms,
+                          datasets_res_dir, plot_settings)
+        plot_mem(dataset_trajectories_list, datasets, algorithms,
                           datasets_res_dir, plot_settings)
 
     if args.write_time_statistics:

@@ -158,7 +158,7 @@ class Trajectory:
                 self.rel_errors.keys()))
 
         # load system logs
-        self.cpu_usage, self.mem_usage =\
+        self.cpu_usage, self.mem_usage, self.process_names =\
             traj_loading.load_system_logs(self.data_dir, nm_cpu_log, nm_mem_log)
         print(Fore.GREEN+'...done.')
 
