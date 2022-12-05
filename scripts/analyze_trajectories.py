@@ -30,7 +30,7 @@ def spec(N):
     t = np.linspace(-510, 510, N)                                              
     return np.round(np.clip(np.stack([-t, 510-np.abs(t), t], axis=1), 0, 255)).astype("float32")/255
 
-PALLETE = spec(5)
+PALLETE = spec(8)
 
 
 def collect_odometry_error_per_dataset(dataset_multierror_list,
