@@ -441,6 +441,10 @@ if __name__ == '__main__':
         default=default_path)
 
     parser.add_argument(
+        '--gt_dir', help='base folder with the ground truths to analyze',
+        default=default_path)
+
+    parser.add_argument(
         '--platform', help='HW platform: [laptop, nuc, odroid, up]',
         default='laptop')
     parser.add_argument(
@@ -575,10 +579,11 @@ if __name__ == '__main__':
             exp_name = args.platform + '_' + config_i + '_' + d
             trace_dir = os.path.join(args.results_dir,
                                      args.platform, config_i, exp_name)
+            gt_dir = os.path.join(args.gt_dir, d)
             assert os.path.exists(trace_dir),\
                 "{0} not found.".format(trace_dir)
             traj_list, mt_error = analyze_multiple_trials(
-                trace_dir, algo_fn[config_i], n_trials,
+                trace_dir, gt_dir, algo_fn[config_i], n_trials,
                 recalculate_errors=args.recalculate_errors,
                 preset_boxplot_distances=dataset_boxdist_map[d],
                 preset_boxplot_percentages=rel_e_perc,

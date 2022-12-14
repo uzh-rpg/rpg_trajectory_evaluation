@@ -22,7 +22,7 @@ rc('text', usetex=True)
 FORMAT = '.pdf'
 
 
-def analyze_multiple_trials(results_dir, est_type, n_trials,
+def analyze_multiple_trials(results_dir, gt_dir, est_type, n_trials,
                             recalculate_errors=False,
                             preset_boxplot_distances=[],
                             preset_boxplot_percentages=[0.1, 0.2, 0.3, 0.4, 0.5],
@@ -44,7 +44,7 @@ def analyze_multiple_trials(results_dir, est_type, n_trials,
             Trajectory.remove_files_in_save_dir(results_dir, est_type,
                                                 match_base_fn)
         traj = Trajectory(
-            results_dir, est_type=est_type, suffix=suffix,
+            results_dir, gt_dir, est_type=est_type, suffix=suffix,
             nm_est=kNsToEstFnMapping[est_type] + suffix + '.'+kFnExt,
             nm_matches=match_base_fn,
             preset_boxplot_distances=preset_boxplot_distances,

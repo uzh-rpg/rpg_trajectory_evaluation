@@ -25,7 +25,7 @@ class Trajectory:
     cache_res_dir_nm = 'cached'
     default_boxplot_perc = [0.1, 0.2, 0.3, 0.4, 0.5]
 
-    def __init__(self, results_dir, platform='', alg_name='', dataset_name='',
+    def __init__(self, results_dir, gt_dir_, platform='', alg_name='', dataset_name='',
                  align_type='sim3', align_num_frames=-1, suffix='',
                  est_type='traj_est',
                  nm_gt='data.csv',
@@ -51,6 +51,7 @@ class Trajectory:
         self.success = False
 
         self.data_dir = results_dir
+        self.gt_dir = gt_dir_
         self.data_loaded = False
         self.data_aligned = False
         self.saved_results_dir = os.path.join(
@@ -134,12 +135,12 @@ class Trajectory:
         # only timestamped pose series is supported
         self.t_es, self.p_es, self.q_es, self.t_gt, self.p_gt, self.q_gt =\
             traj_loading.load_stamped_dataset(
-                self.data_dir, nm_gt, nm_est,
+                self.data_dir, self.gt_dir, nm_gt, nm_est,
                 os.path.join(Trajectory.saved_res_dir_nm, self.est_type,
                              nm_matches),
                 start_t_sec=self.start_time_sec, end_t_sec=self.end_time_sec)
         self.t_gt_raw, self.p_gt_raw, self.q_gt_raw =\
-            traj_loading.load_raw_groundtruth(self.data_dir, nm_gt,
+            traj_loading.load_raw_groundtruth(self.gt_dir, nm_gt,
                                               start_t_sec=self.start_time_sec,
                                               end_t_sec=self.end_time_sec)
         if self.p_es.size == 0:

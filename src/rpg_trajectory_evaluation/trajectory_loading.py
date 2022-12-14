@@ -60,6 +60,7 @@ def load_estimate_and_associate(fn_gt,
 
 
 def load_stamped_dataset(results_dir,
+                         gt_dir,
                          nm_gt='stamped_groundtruth.txt',
                          nm_est='stamped_traj_estimate.txt',
                          nm_matches='stamped_est_gt_matches.txt',
@@ -69,7 +70,7 @@ def load_stamped_dataset(results_dir,
     '''
     read synchronized estimation and groundtruth and associate the timestamps
     '''
-    fn_gt = os.path.join(results_dir, nm_gt)
+    fn_gt = os.path.join(gt_dir, nm_gt)
 
     data_gt = np.loadtxt(fn_gt, delimiter=",", dtype=float)
 
