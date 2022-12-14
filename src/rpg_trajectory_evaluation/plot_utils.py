@@ -13,6 +13,12 @@ from matplotlib import rc
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})
 rc('text', usetex=True)
 
+from scipy.spatial import KDTree
+from webcolors import (
+    CSS3_HEX_TO_NAMES, 
+    hex_to_rgb,
+)
+
 FORMAT = '.pdf'
 
 
@@ -52,11 +58,59 @@ def boxplot_compare(ax, xlabels,
     xlims = ax.get_xlim()
     ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
     if legend:
-        # ax.legend(leg_handles, leg_labels, bbox_to_anchor=(
-            # 1.05, 1), loc=2, borderaxespad=0.)
-        ax.legend(leg_handles, leg_labels)
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
     map(lambda x: x.set_visible(False), leg_handles)
 
+def boxplot_compare_cpu(ax, xlabels,
+                    data, data_labels, data_colors,
+                    legend=True):
+    n_data = len(data)
+    n_xlabel = len(xlabels)
+    leg_handles = []
+    leg_labels = []
+    idx = 0
+    for idx, d in enumerate(data):
+        # print("idx and d: {0} and {1}".format(idx, d))
+        w = 1 / (1.5 * n_data + 1.5)
+        widths = [w for pos in np.arange(n_xlabel)]
+        positions = [pos - 0.5 + 1.5 * w + idx * w
+                     for pos in np.arange(n_xlabel)]
+        # print("Positions: {0}".format(positions))
+        bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
+        color_box(bp, data_colors[idx])
+        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
+        leg_handles.append(tmp)
+        leg_labels.append(data_labels[idx])
+        idx += 1
+
+    ax.set_xticks(np.arange(n_xlabel))
+    ax.set_xticklabels(xlabels)
+    if legend:
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
+    map(lambda x: x.set_visible(False), leg_handles)
+
+def plot_mem_over_time_all(fig, mem_usages, proc_names, data_colors, data_labels, alpha=1.0):
+    proc_idx = 0
+    for proc_idx in range(len(proc_names[0])-1):
+        # create a new subplot
+        idx = 0
+        ax = fig.add_subplot(3,3,proc_idx+1)
+        for idx in range(len(mem_usages)):
+            # print("timestamps: ", mem_usages[idx][:,0])
+            # print("mem_usage: ", mem_usages[idx][:,proc_idx+1])
+            # print("color: ", data_colors[idx])
+            # print("name: ", data_labels[idx])
+            plot_mem_over_time(ax, mem_usages[idx][:,0], mem_usages[idx][:,proc_idx+1], data_colors[idx], data_labels[idx])
+            idx += 1
+        proc_idx += 1
+
+ 
+def plot_mem_over_time(ax, timestamps, mem_usage, color, name, alpha=1.0):
+    ax.plot(timestamps, mem_usage, color=color, linestyle='-', alpha=alpha, label=name)
 
 def plot_trajectory_top(ax, pos, color, name, alpha=1.0):
     ax.grid(ls='--', color='0.7')
@@ -90,3 +144,18 @@ def plot_error_n_dim(ax, distances, errors, results_dir,
     for i in range(len(colors)):
         ax.plot(distances, errors[:, i],
                 colors[i]+'-', label=labels[i])
+
+def convert_rgb_to_names(rgb_tuple):
+    
+    # a dictionary of all the hex and their respective names in css3
+    css3_db = CSS3_HEX_TO_NAMES
+    names = []
+    rgb_values = []
+    for color_hex, color_name in css3_db.items():
+        names.append(color_name)
+        rgb_values.append(hex_to_rgb(color_hex))
+    
+    rgb_tuple = (rgb_tuple[0]*255, rgb_tuple[1]*255, rgb_tuple[2]*255)
+    kdt_db = KDTree(rgb_values)
+    distance, index = kdt_db.query(rgb_tuple)
+    return f'{names[index]}'

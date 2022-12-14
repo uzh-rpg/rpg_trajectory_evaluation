@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import argparse
@@ -66,6 +66,7 @@ def analyze_multiple_trials(results_dir, est_type, n_trials,
             traj_list.append(traj)
         else:
             print("Trials {0} fails, will not count.".format(trial_i))
+
     mt_error.summary()
     mt_error.updateStatistics()
     return traj_list, mt_error
@@ -171,23 +172,23 @@ if __name__ == '__main__':
         print(Fore.MAGENTA +
               ">>> Plotting absolute error for one trajectory...")
         fig = plt.figure(figsize=(6, 5.5))
-        ax = fig.add_subplot(111, aspect='equal',
+        ax = fig.add_subplot(111,
                              xlabel='x [m]', ylabel='y [m]')
         pu.plot_trajectory_top(ax, plot_traj.p_es_aligned, 'b', 'Estimate')
         pu.plot_trajectory_top(ax, plot_traj.p_gt, 'm', 'Groundtruth')
         pu.plot_aligned_top(ax, plot_traj.p_es_aligned, plot_traj.p_gt,
                             plot_traj.align_num_frames)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.legend(bbox_to_anchor =(0.75, 1.15), ncol = 2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(plot_dir_i+'/trajectory_top' + '_' + plot_traj.align_str +
                     FORMAT, bbox_inches="tight")
 
         fig = plt.figure(figsize=(6, 5.5))
-        ax = fig.add_subplot(111, aspect='equal',
+        ax = fig.add_subplot(111,
                              xlabel='x [m]', ylabel='z [m]')
         pu.plot_trajectory_side(ax, plot_traj.p_es_aligned, 'b', 'Estimate')
         pu.plot_trajectory_side(ax, plot_traj.p_gt, 'm', 'Groundtruth')
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.legend(bbox_to_anchor =(0.75, 1.15), ncol = 2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(plot_dir_i+'/trajectory_side' + '_' + plot_traj.align_str +
                     FORMAT, bbox_inches="tight")

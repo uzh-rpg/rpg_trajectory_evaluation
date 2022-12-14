@@ -14,7 +14,7 @@ In addition, the evaluation can be easily [customized](#customization).
 
 If you use this code in an academic context, please cite the following paper:
 
-Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry, IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018. [PDF](https://rpg.ifi.uzh.ch/docs/IROS18_Zhang.pdf)
+Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluation for Visual(-Inertial) Odometry, IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018.
 
 ```
 @InProceedings{Zhang18iros,
@@ -344,6 +344,3 @@ See `package.yaml` for the list of authors that have contributed to this toolbox
 
 It might happen that some open-source code is incorporated into the toolbox but we missed the license/copyright information.
 If you recognize such a situation, please open an issue.
-
-## Acknowledgements
-The development of this toolbox was supported by the the Swiss National Science Foundation (SNSF) through the National Centre of Competence in Research (NCCR) Robotics, the SNSF-ERC Starting Grant, and the DARPA FLA program.
