@@ -125,7 +125,7 @@ class Trajectory:
         Loads the trajectory data. The resuls {p_es, q_es, p_gt, q_gt} is
         synchronized and has the same length.
         """
-        if not os.path.exists(os.path.join(self.data_dir, nm_gt)) or \
+        if not os.path.exists(os.path.join(self.gt_dir, nm_gt)) or \
                 not os.path.exists(os.path.join(self.data_dir, nm_est)):
             print(Fore.RED+"Either groundtruth or estimate does not exist")
             return False
