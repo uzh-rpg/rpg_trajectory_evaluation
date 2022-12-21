@@ -7,8 +7,10 @@ function main
     local OUT_DIR="./results/euroc_ofvins_mono_Pi"
     local RESULTS_DIR="/home/paul/git/eth/paul-joseph/Data/Testing/EuRoC/"
     local GT_DIR="/home/paul/git/eth/paul-joseph/Data/GroundTruth/EuRoC/"
+	local PLATFORM=laptop
+	local RECALC_ERRORS=0
 
-	while getopts ":ho:r:g:c:" opt; do
+	while getopts ":ho:r:Rg:c:p:" opt; do
 	    case $opt in
 	        h)
 	            print_help
@@ -25,6 +27,12 @@ function main
 		    	;;
 		    c)
 		    	CONF_YAML=$OPTARG
+		    	;;
+		    p)
+		    	PLATFORM=$OPTARG
+		    	;;
+		    R)
+		    	RECALC_ERRORS=1
 		    	;;
 	        *)
 	         	exit_fail "Illegal parameter!"
@@ -45,7 +53,11 @@ function main
 
 function run_python_script
 {
-    python scripts/analyze_trajectories.py $CONF_YAML --output_dir=$OUT_DIR --results_dir=$RESULTS_DIR --gt_dir=$GT_DIR --odometry_error_per_dataset --overall_odometry_error --plot_trajectories --rmse_table --no_plot_aligned --no_plot_traj_per_alg --plot_system_logs
+	if [ $RECALC_ERRORS == 1 ]; then
+    	python scripts/analyze_trajectories.py $CONF_YAML --output_dir=$OUT_DIR --results_dir=$RESULTS_DIR --gt_dir=$GT_DIR --platform=$PLATFORM --recalculate_errors --odometry_error_per_dataset --overall_odometry_error --plot_trajectories --rmse_table --no_plot_aligned --no_plot_traj_per_alg --plot_system_logs
+	else 
+    	python scripts/analyze_trajectories.py $CONF_YAML --output_dir=$OUT_DIR --results_dir=$RESULTS_DIR --gt_dir=$GT_DIR --platform=$PLATFORM --odometry_error_per_dataset --overall_odometry_error --plot_trajectories --rmse_table --no_plot_aligned --no_plot_traj_per_alg --plot_system_logs
+	fi
 }
 
 function print_help
@@ -55,7 +67,7 @@ function print_help
 	echo
 	echo "Usage:"
 	echo
-	echo "	$(basename "$0") [-h]  |  -o <file_name>"
+	echo "	$(basename "$0") [-h]  |  -o <file_name> -c <config file>"
 	echo
 	echo "Where:"
 	echo
@@ -64,6 +76,8 @@ function print_help
 	echo "	-r	name of results dir"
     echo "	-g	name of ground truth dir"
 	echo "	-c	name of the config file"
+	echo "	-p	name of the platform"
+	echo "	-R	if set we recalculate the errors (useful if you reran a sequence)"
 	echo
 }
 
