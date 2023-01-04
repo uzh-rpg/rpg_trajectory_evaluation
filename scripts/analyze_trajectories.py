@@ -113,6 +113,21 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, algorithm_na
         fig.savefig(output_dir+'/'+dataset_nm +
                     '_trans_rot_error'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
+        # plot absolute errors too
+        fig = plt.figure(figsize=(12, 3))
+        ax = fig.add_subplot(
+            121, xlabel='Distance traveled (m)',
+            ylabel='Translation error (m)')
+        pu.boxplot_compare(ax, distances, [rel_err['trans_err'][v] for v in algorithm_names],
+                           config_labels, config_colors, legend=False)
+        ax = fig.add_subplot(
+            122, xlabel='Distance traveled (m)', ylabel='Rotation error (deg)')
+        pu.boxplot_compare_abs(ax, distances, [rel_err['rot_deg_per_m'][v] for v in algorithm_names],
+                           config_labels, config_colors, legend=True)
+        fig.tight_layout()
+        fig.savefig(output_dir+'/'+dataset_nm +
+                    '_trans_rot_error_abs'+FORMAT, bbox_inches="tight", dpi=args.dpi)
+        plt.close(fig)
 
 
 def collect_rmse_per_dataset(config_multierror_list,

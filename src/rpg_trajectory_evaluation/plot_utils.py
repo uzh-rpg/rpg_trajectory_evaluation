@@ -30,6 +30,40 @@ def color_box(bp, color):
          for idx in range(len(bp[elem]))]
     return
 
+def boxplot_compare_abs(ax, xlabels,
+                    data, data_labels, data_colors,
+                    legend=True):
+    n_data = len(data)
+    n_xlabel = len(xlabels)
+    leg_handles = []
+    leg_labels = []
+    idx = 0
+    for idx, d in enumerate(data):
+        # print("idx and d: {0} and {1}".format(idx, d))
+        w = 1 / (1.5 * n_data + 1.5)
+        widths = [w for pos in np.arange(n_xlabel)]
+        positions = [pos - 0.5 + 1.5 * w + idx * w
+                     for pos in np.arange(n_xlabel)]
+        # print("Positions: {0}".format(positions))
+        d_abs = []
+        for idx_,d_ in enumerate(d):
+            d_abs.append(d_*xlabels[idx_])
+        bp = ax.boxplot(d_abs, 0, '', positions=positions, widths=widths)
+        color_box(bp, data_colors[idx])
+        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
+        leg_handles.append(tmp)
+        leg_labels.append(data_labels[idx])
+        idx += 1
+
+    ax.set_xticks(np.arange(n_xlabel))
+    ax.set_xticklabels(xlabels)
+    xlims = ax.get_xlim()
+    ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
+    if legend:
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
+    map(lambda x: x.set_visible(False), leg_handles)
 
 def boxplot_compare(ax, xlabels,
                     data, data_labels, data_colors,
