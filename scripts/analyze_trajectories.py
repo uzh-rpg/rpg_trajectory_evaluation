@@ -26,8 +26,8 @@ rc('text', usetex=True)
 
 FORMAT = '.pdf'
 
-def spec(N):                                             
-    t = np.linspace(-510, 510, N)                                              
+def spec(N):
+    t = np.linspace(-510, 510, N)
     return np.round(np.clip(np.stack([-t, 510-np.abs(t), t], axis=1), 0, 255)).astype("float32")/255
 
 PALLETE = spec(8)
@@ -101,14 +101,14 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, algorithm_na
 
         fig = plt.figure(figsize=(12, 3))
         ax = fig.add_subplot(
-            121, xlabel='Distance traveled (m)',
-            ylabel='Translation error (\%)')
+            121, xlabel='Distance traveled [m]',
+            ylabel='Translation error [\%]')
         pu.boxplot_compare(ax, distances, [rel_err['trans_err_perc'][v] for v in algorithm_names],
                            config_labels, config_colors, legend=False)
         ax = fig.add_subplot(
-            122, xlabel='Distance traveled (m)', ylabel='Rotation error (deg / m)')
+            122, xlabel='Distance traveled [m]', ylabel='Rotation error [deg / m]')
         pu.boxplot_compare(ax, distances, [rel_err['rot_deg_per_m'][v] for v in algorithm_names],
-                           config_labels, config_colors, legend=True)
+                           config_labels, config_colors, legend=False)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
                     '_trans_rot_error'+FORMAT, bbox_inches="tight", dpi=args.dpi)
@@ -116,14 +116,14 @@ def plot_odometry_error_per_dataset(dataset_rel_err, dataset_names, algorithm_na
         # plot absolute errors too
         fig = plt.figure(figsize=(12, 3))
         ax = fig.add_subplot(
-            121, xlabel='Distance traveled (m)',
-            ylabel='Translation error (m)')
+            121, xlabel='Distance traveled [m]',
+            ylabel='Translation error [m]')
         pu.boxplot_compare(ax, distances, [rel_err['trans_err'][v] for v in algorithm_names],
                            config_labels, config_colors, legend=False)
         ax = fig.add_subplot(
-            122, xlabel='Distance traveled (m)', ylabel='Rotation error (deg)')
+            122, xlabel='Distance traveled [m]', ylabel='Rotation error [deg]')
         pu.boxplot_compare_abs(ax, distances, [rel_err['rot_deg_per_m'][v] for v in algorithm_names],
-                           config_labels, config_colors, legend=True)
+                           config_labels, config_colors, legend=False)
         fig.tight_layout()
         fig.savefig(output_dir+'/'+dataset_nm +
                     '_trans_rot_error_abs'+FORMAT, bbox_inches="tight", dpi=args.dpi)
@@ -167,7 +167,7 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, algorithm_names,
     fig = plt.figure(figsize=(6, 3))
     ax = fig.add_subplot(
         111, xlabel='Datasets',
-        ylabel='Translation RMSE (m)')
+        ylabel='Translation RMSE [m]')
     pu.boxplot_compare(ax, labels,
                        [algorithm_rmse['trans_err'][v] for v in algorithm_names],
                        config_labels, config_colors)
@@ -179,7 +179,7 @@ def plot_rmse_per_dataset(algorithm_rmse, dataset_names, algorithm_names,
     fig = plt.figure(figsize=(6, 3))
     ax = fig.add_subplot(
         111, xlabel='Datasets',
-        ylabel='Rotation RMSE (deg)')
+        ylabel='Rotation RMSE [deg]')
     pu.boxplot_compare(ax, labels, [algorithm_rmse['rot_err'][v] for v in algorithm_names],
                        config_labels, config_colors)
     fig.tight_layout()
@@ -211,7 +211,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
                              xlabel='x [m]', ylabel='y [m]')
         if dataset_nm in plot_settings['datasets_titles']:
             ax.set_title(plot_settings['datasets_titles'][dataset_nm])
-        
+
         for alg in algorithm_names:
             if plot_traj_per_alg:
                 fig_i = plt.figure(figsize=(6, 5.5))
@@ -222,7 +222,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
                 pu.plot_trajectory_top(ax_i, p_gt_0[alg], 'm', 'Groundtruth')
                 if plot_aligned:
                     pu.plot_aligned_top(ax_i, p_es_0[alg], p_gt_0[alg], -1)
-                plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
                 fig_i.tight_layout()
                 fig_i.savefig(output_dir+'/' + dataset_nm + '_trajectory_top_' +
                               plot_settings['algo_labels'][alg] + FORMAT,
@@ -234,7 +234,7 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
                                    plot_settings['algo_labels'][alg])
         plt.sca(ax)
         pu.plot_trajectory_top(ax, p_gt_raw, 'm', 'Groundtruth')
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + dataset_nm +
                     '_trajectory_top'+FORMAT, bbox_inches="tight", dpi=args.dpi)
@@ -275,11 +275,11 @@ def plot_trajectories(dataset_trajectories_list, dataset_names, algorithm_names,
 
 def plot_cpu(dataset_trajectories_list, dataset_names, algorithm_names,
                       datasets_out_dir, plot_settings, plot_idx=0):
-    
+
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         output_dir = datasets_out_dir[dataset_nm]
         dataset_trajs = dataset_trajectories_list[dataset_idx]
-        cpu_usage = [] 
+        cpu_usage = []
         for traj in dataset_trajs:
             cpu_usage.append(traj[0].cpu_usage)
 
@@ -297,10 +297,10 @@ def plot_cpu(dataset_trajectories_list, dataset_names, algorithm_names,
             111, xlabel='System Processes', ylabel="CPU Usage [\%]")
         # if dataset_nm in plot_settings['datasets_titles']:
         #     ax.set_title(plot_settings['datasets_titles'][dataset_nm])
-        
+
         proc_names = cpu_usage[0].columns.values
-        pu.boxplot_compare_cpu(ax, proc_names, cpu_usage, 
-                            labels, colors)
+        pu.boxplot_compare_cpu(ax, proc_names, cpu_usage,
+                            labels, colors, legend=False)
 
         # plt.sca(ax)
         # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -311,7 +311,7 @@ def plot_cpu(dataset_trajectories_list, dataset_names, algorithm_names,
 
 def plot_mem(dataset_trajectories_list, dataset_names, algorithm_names,
                       datasets_out_dir, plot_settings, plot_idx=0):
-    
+
     for dataset_idx, dataset_nm in enumerate(dataset_names):
         output_dir = datasets_out_dir[dataset_nm]
         dataset_trajs = dataset_trajectories_list[dataset_idx]
@@ -331,7 +331,7 @@ def plot_mem(dataset_trajectories_list, dataset_names, algorithm_names,
 
         # # plot mem usage
         fig = plt.figure(figsize=(12, 3))
-        
+
         pu.plot_mem_over_time_all(fig, mem_usage, proc_names, colors, labels)
 
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -391,7 +391,7 @@ def plot_overall_odometry_errors(odo_err_col, algorithm_names, rel_e_distances,
         ax = fig.add_subplot(
             111, xlabel='Distance traveled [m]', ylabel=ylabel)
         pu.boxplot_compare(ax, distances, errors,
-                           labels, colors, legend=True)
+                           labels, colors, legend=False)
         fig.tight_layout()
         fig.savefig(output_dir+'/' + 'overall_{}'.format(et)+FORMAT,
                     bbox_inches="tight", dpi=args.dpi)
@@ -717,7 +717,7 @@ if __name__ == '__main__':
                           datasets_res_dir, plot_settings, plot_side=args.plot_side,
                           plot_aligned=args.plot_aligned,
                           plot_traj_per_alg=args.plot_traj_per_alg)
-    
+
     if args.plot_system_logs:
         print(Fore.MAGENTA+'--- Plotting trajectory CPU and MEM usage ... ---')
         plot_cpu(dataset_trajectories_list, datasets, algorithms,

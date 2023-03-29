@@ -15,7 +15,7 @@ rc('text', usetex=True)
 
 from scipy.spatial import KDTree
 from webcolors import (
-    CSS3_HEX_TO_NAMES, 
+    CSS3_HEX_TO_NAMES,
     hex_to_rgb,
 )
 
@@ -132,14 +132,18 @@ def plot_mem_over_time_all(fig, mem_usages, proc_names, data_colors, data_labels
     for proc_idx in range(len(proc_names[0])-1):
         # create a new subplot
         idx = 0
-        ax = fig.add_subplot(3,3,proc_idx+1, xlabel="Time [s]", ylabel="MEM Usage [\%]")
+        if(proc_idx == 0):
+            ax = fig.add_subplot(3,3,proc_idx+1, xlabel="Time [s]", ylabel="MEM Usage [\%]")
+        else:
+            ax = fig.add_subplot(3,3,proc_idx+1, xlabel="Time [s]")
+
         ax.title.set_text(proc_names[0][proc_idx + 1])
         for idx in range(len(mem_usages)):
             plot_mem_over_time(ax, mem_usages[idx][:,0], mem_usages[idx][:,proc_idx+1], data_colors[idx], data_labels[idx])
             idx += 1
         proc_idx += 1
 
- 
+
 def plot_mem_over_time(ax, timestamps, mem_usage, color, name, alpha=1.0):
     # substract first timestamp from all times to get relative time
     time_start = timestamps[0]
@@ -180,7 +184,7 @@ def plot_error_n_dim(ax, distances, errors, results_dir,
                 colors[i]+'-', label=labels[i])
 
 def convert_rgb_to_names(rgb_tuple):
-    
+
     # a dictionary of all the hex and their respective names in css3
     css3_db = CSS3_HEX_TO_NAMES
     names = []
@@ -188,7 +192,7 @@ def convert_rgb_to_names(rgb_tuple):
     for color_hex, color_name in css3_db.items():
         names.append(color_name)
         rgb_values.append(hex_to_rgb(color_hex))
-    
+
     rgb_tuple = (rgb_tuple[0]*255, rgb_tuple[1]*255, rgb_tuple[2]*255)
     kdt_db = KDTree(rgb_values)
     distance, index = kdt_db.query(rgb_tuple)
