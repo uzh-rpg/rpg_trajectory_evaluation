@@ -115,3 +115,18 @@ def load_system_logs(results_dir,
     proc_names = np.loadtxt(fn_mem, delimiter=",", dtype=str, max_rows=1)
 
     return data_cpu, data_mem, proc_names
+
+def load_freq(results_dir, nm_timestamps):
+    fn_es = os.path.join(results_dir, nm_timestamps)
+    # extract timestamps from file 
+    time_es = np.loadtxt(fn_es, delimiter=",", dtype=float, usecols=range(1))
+    # calc freq based on timestamps
+    freq_es = []
+    for es_id, time in enumerate(time_es):
+        # skip first data because we need the time difference 
+        if (es_id == 0):
+            continue
+        freq_es.append(10e8*(1/(time_es[es_id] - time_es[es_id-1])))
+
+    return freq_es
+

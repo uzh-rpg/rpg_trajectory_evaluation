@@ -34,7 +34,8 @@ class Trajectory:
                  preset_boxplot_distances=[],
                  preset_boxplot_percentages=[],
                  nm_cpu_log='log_cpu.csv',
-                 nm_mem_log='log_mem.csv'):
+                 nm_mem_log='log_mem.csv',
+                 nm_timestamps='vins_result_no_loop.csv'):
 
         assert os.path.exists(results_dir),\
             "Specified directory {0} does not exist.".format(results_dir)
@@ -103,7 +104,7 @@ class Trajectory:
             self.rel_error_cached_nm+self.suffix_str+".pickle")
 
         print("Loading {0} and {1}...".format(nm_gt, nm_est))
-        self.data_loaded = self.load_data(nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log)
+        self.data_loaded = self.load_data(nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log, nm_timestamps)
         if not self.data_loaded:
             print(Fore.RED+"Loading data failed.")
             return
@@ -120,7 +121,7 @@ class Trajectory:
 
         self.align_trajectory()
 
-    def load_data(self, nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log):
+    def load_data(self, nm_gt, nm_est, nm_matches, nm_cpu_log, nm_mem_log, nm_timestamps):
         """
         Loads the trajectory data. The resuls {p_es, q_es, p_gt, q_gt} is
         synchronized and has the same length.
@@ -143,6 +144,8 @@ class Trajectory:
             traj_loading.load_raw_groundtruth(self.gt_dir, nm_gt,
                                               start_t_sec=self.start_time_sec,
                                               end_t_sec=self.end_time_sec)
+        self.freq = traj_loading.load_freq(self.data_dir, nm_timestamps)
+
         if self.p_es.size == 0:
             print(Fore.RED+"Empty estimate file.")
             return False

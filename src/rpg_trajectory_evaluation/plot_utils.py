@@ -59,6 +59,7 @@ def boxplot_compare_abs(ax, xlabels,
     ax.set_xticklabels(xlabels)
     xlims = ax.get_xlim()
     ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
+    ax.grid(axis = 'y', linestyle = '--', linewidth = 0.5)
     if legend:
        leg = ax.legend(data_labels)
        for i, j in enumerate(leg.legendHandles):
@@ -91,6 +92,7 @@ def boxplot_compare(ax, xlabels,
     ax.set_xticklabels(xlabels)
     xlims = ax.get_xlim()
     ax.set_xlim([xlims[0]-0.1, xlims[1]-0.1])
+    ax.grid(axis = 'y', linestyle = '--', linewidth = 0.5)
     if legend:
        leg = ax.legend(data_labels)
        for i, j in enumerate(leg.legendHandles):
@@ -121,6 +123,7 @@ def boxplot_compare_cpu(ax, xlabels,
 
     ax.set_xticks(np.arange(n_xlabel))
     ax.set_xticklabels(xlabels)
+    ax.grid(axis = 'y', linestyle = '--', linewidth = 0.5)
     if legend:
        leg = ax.legend(data_labels)
        for i, j in enumerate(leg.legendHandles):
@@ -197,3 +200,38 @@ def convert_rgb_to_names(rgb_tuple):
     kdt_db = KDTree(rgb_values)
     distance, index = kdt_db.query(rgb_tuple)
     return f'{names[index]}'
+
+def boxplot_compare_freq(ax,
+                    data, data_labels, data_colors,
+                    legend=True):
+    n_data = len(data)
+    leg_handles = []
+    leg_labels = []
+    idx = 0
+
+    for idx, d in enumerate(data):
+        w = 1 / (1.5 * n_data + 1.5)
+        widths = [w]
+        positions = [1.5 * w + idx * w]
+        # print("Positions: {0}".format(positions))
+        bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
+        color_box(bp, data_colors[idx])
+        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
+        leg_handles.append(tmp)
+        leg_labels.append(data_labels[idx])
+        idx += 1
+
+    ax.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False) # labels along the bottom edge are off
+
+    ax.grid(axis = 'y', linestyle = '--', linewidth = 0.5)
+
+    if legend:
+       leg = ax.legend(data_labels)
+       for i, j in enumerate(leg.legendHandles):
+            j.set_color(data_colors[i])
+    map(lambda x: x.set_visible(False), leg_handles)

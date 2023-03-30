@@ -4,10 +4,10 @@ function main
 {
 	# Get command line options
     local CONF_YAML=~/git/eth/paul-joseph/Data/Testing_Configs/euroc_test.yaml
-    local OUT_DIR="./results/euroc_ofvins_mono_Pi"
+    local OUT_DIR="./results/euroc_test"
     local RESULTS_DIR="/home/paul/git/eth/paul-joseph/Data/Testing/EuRoC/"
     local GT_DIR="/home/paul/git/eth/paul-joseph/Data/GroundTruth/EuRoC/"
-	local PLATFORM=laptop
+	local PLATFORM=desktop
 	local RECALC_ERRORS=0
 
 	while getopts ":ho:r:Rg:c:p:" opt; do

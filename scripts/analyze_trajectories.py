@@ -339,6 +339,39 @@ def plot_mem(dataset_trajectories_list, dataset_names, algorithm_names,
                     '_mem_usage'+FORMAT, bbox_inches="tight", dpi=args.dpi)
         plt.close(fig)
 
+def plot_freq(dataset_trajectories_list, dataset_names, algorithm_names,
+                      datasets_out_dir, plot_settings, plot_idx=0):
+
+    for dataset_idx, dataset_nm in enumerate(dataset_names):
+        output_dir = datasets_out_dir[dataset_nm]
+        dataset_trajs = dataset_trajectories_list[dataset_idx]
+        freq = []
+        for traj in dataset_trajs:
+            freq.append(traj[0].freq)
+
+        print("Plotting {0}...".format(dataset_nm))
+
+        colors = []
+        labels = []
+        for alg in algorithm_names:
+            colors.append(plot_settings['algo_colors'][alg])
+            labels.append(plot_settings['algo_labels'][alg])
+
+        # plot cpu usage
+        fig = plt.figure(figsize=(2, 2))
+        ax = fig.add_subplot(
+            111, xlabel='', ylabel="Frequency [Hz]")
+
+        pu.boxplot_compare_freq(ax, freq,
+                            labels, colors, legend=False)
+
+        # plt.sca(ax)
+        # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        fig.tight_layout()
+        fig.savefig(output_dir+'/'+dataset_nm +
+                    '_freq'+FORMAT, bbox_inches="tight", dpi=args.dpi)
+        plt.close(fig)
+
 def collect_odometry_error_per_algorithm(config_multierror_list, algorithms, distances,
                                          rel_keys=['rel_trans_perc', 'rel_rot_deg_per_m']):
     odometry_error_collection = {}
@@ -498,6 +531,8 @@ if __name__ == '__main__':
                         help='Plot the trajectories', action='store_true')
     parser.add_argument('--plot_system_logs',
                         help='Plot the cpu and mem usage', action='store_true')
+    parser.add_argument('--plot_frequency_analysis',
+                        help='Plot the update freq of the VINS estimator', action='store_true')
     parser.add_argument('--no_plot_side', action='store_false', dest='plot_side')
     parser.add_argument('--no_plot_aligned', action='store_false', dest='plot_aligned')
     parser.add_argument('--no_plot_traj_per_alg', action='store_false',
@@ -510,7 +545,7 @@ if __name__ == '__main__':
                         action='store_true')
     parser.add_argument('--dpi', type=int, default=300)
     parser.set_defaults(odometry_error_per_dataset=False, overall_odometry_error=False,
-                        rmse_table=False, plot_system_logs=False,
+                        rmse_table=False, plot_system_logs=False, plot_frequency_analysis=True,
                         plot_trajectories=False, rmse_boxplot=False,
                         recalculate_errors=False, png=False, time_statistics=False,
                         sort_names=True, plot_side=True, plot_aligned=True,
@@ -632,6 +667,12 @@ if __name__ == '__main__':
     print("#####################################")
     print(">>> Analyze different error types...")
     print("#####################################")
+
+    if args.plot_frequency_analysis:
+        print(Fore.MAGENTA+'--- Plotting Frequency Analysis ... ---')
+        plot_freq(dataset_trajectories_list, datasets, algorithms,
+                          datasets_res_dir, plot_settings)
+
     print(Fore.RED+">>> Processing absolute trajectory errors...")
     if args.rmse_table:
         rmse_table = {}
@@ -668,6 +709,7 @@ if __name__ == '__main__':
         plot_rmse_per_dataset(algorithm_rmse, datasets, algorithms,
                               output_dir, plot_settings)
     print(Fore.GREEN+"<<< ...processing absolute trajectory errors done.")
+
 
     print(Fore.RED+">>> Collecting odometry errors per dataset...")
     if args.odometry_error_per_dataset:
