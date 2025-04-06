@@ -1,15 +1,18 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 @author: Christian Forster
 """
 
 import os
-import yaml
-import numpy as np
-import matplotlib.pyplot as plt
+
 import matplotlib as mpl
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.lines as mlines
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
 from matplotlib import rc
+from mpl_toolkits.mplot3d import Axes3D
+
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})
 rc('text', usetex=True)
 
@@ -42,8 +45,8 @@ def boxplot_compare(ax, xlabels,
         # print("Positions: {0}".format(positions))
         bp = ax.boxplot(d, 0, '', positions=positions, widths=widths)
         color_box(bp, data_colors[idx])
-        tmp, = plt.plot([1, 1], c=data_colors[idx], alpha=0)
-        leg_handles.append(tmp)
+        leg_line = mlines.Line2D([], [], color=data_colors[idx])
+        leg_handles.append(leg_line)
         leg_labels.append(data_labels[idx])
         idx += 1
 

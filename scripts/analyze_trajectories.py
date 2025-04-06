@@ -1,23 +1,22 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-import os
 import argparse
-from ruamel.yaml import YAML
-import shutil
 import json
+import os
+import shutil
 from datetime import datetime
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import rc
-from colorama import init, Fore
-
 import add_path
-from trajectory import Trajectory
+import matplotlib.pyplot as plt
+import numpy as np
 import plot_utils as pu
 import results_writer as res_writer
 from analyze_trajectory_single import analyze_multiple_trials
-from fn_constants import kNsToEstFnMapping, kNsToMatchFnMapping, kFnExt
+from colorama import Fore, init
+from fn_constants import kFnExt, kNsToEstFnMapping, kNsToMatchFnMapping
+from matplotlib import rc
+from ruamel.yaml import YAML
+from trajectory import Trajectory
 
 init(autoreset=True)
 
@@ -26,11 +25,7 @@ rc('text', usetex=True)
 
 FORMAT = '.pdf'
 
-def spec(N):                                             
-    t = np.linspace(-510, 510, N)                                              
-    return np.round(np.clip(np.stack([-t, 510-np.abs(t), t], axis=1), 0, 255)).astype("float32")/255
-
-PALLETE = spec(20)
+PALLETE = ['b', 'g', 'r', 'c', 'k', 'y', 'm']
 
 
 def collect_odometry_error_per_dataset(dataset_multierror_list,
@@ -545,36 +540,38 @@ if __name__ == '__main__':
     print("#####################################")
     print(Fore.RED+">>> Processing absolute trajectory errors...")
     if args.rmse_table:
-        rmse_table = {}
-        rmse_table['values'] = []
-        for config_mt_error in config_multierror_list:
-            cur_trans_rmse = []
-            for mt_error_d in config_mt_error:
-                print("> Processing {0}".format(mt_error_d.uid))
-                if args.rmse_median_only or n_trials == 1:
-                    cur_trans_rmse.append(
-                        "{:3.3f}".format(
-                            mt_error_d.abs_errors['rmse_trans_stats']['median']))
-                else:
-                    cur_trans_rmse.append(
-                        "{:3.3f}, {:3.3f} ({:3.3f} - {:3.3f})".format(
-                            mt_error_d.abs_errors['rmse_trans_stats']['mean'],
-                            mt_error_d.abs_errors['rmse_trans_stats']['median'],
-                            mt_error_d.abs_errors['rmse_trans_stats']['min'],
-                            mt_error_d.abs_errors['rmse_trans_stats']['max']))
-            rmse_table['values'].append(cur_trans_rmse)
-        rmse_table['rows'] = algorithms
-        rmse_table['cols'] = datasets
-        print('\n--- Generating RMSE tables... ---')
-        res_writer.write_tex_table(
-            rmse_table['values'], rmse_table['rows'], rmse_table['cols'],
-            os.path.join(output_dir, args.platform + '_translation_rmse_' +
-                         eval_uid+'.txt'))
+        for absMetricKey in ['rmse_trans', 'rmse_rot', 'rmse_scale']:
+            rmse_table = {}
+            rmse_table['values'] = []
+            for config_mt_error in config_multierror_list:
+                cur_rmse = []
+                for mt_error_d in config_mt_error:
+                    print("> Processing {0}".format(mt_error_d.uid))
+                    if args.rmse_median_only or n_trials == 1:
+                        cur_rmse.append(
+                            "{:3.3f}".format(
+                                mt_error_d.abs_errors[absMetricKey + '_stats']['median']))
+                    else:
+                        cur_rmse.append(
+                            "{:3.3f}, {:3.3f} ({:3.3f} - {:3.3f})".format(
+                                mt_error_d.abs_errors[absMetricKey + '_stats']['mean'],
+                                mt_error_d.abs_errors[absMetricKey + '_stats']['median'],
+                                mt_error_d.abs_errors[absMetricKey + '_stats']['min'],
+                                mt_error_d.abs_errors[absMetricKey + '_stats']['max']))
+                rmse_table['values'].append(cur_rmse)
+            rmse_table['rows'] = algorithms
+            rmse_table['cols'] = datasets
+            print('\n--- Generating RMSE tables... ---')
+            res_writer.write_tex_table(
+                rmse_table['values'], rmse_table['rows'], rmse_table['cols'],
+                os.path.join(output_dir, args.platform + '_' + absMetricKey + '_' +
+                            eval_uid+'.txt'))
 
     if args.rmse_boxplot and n_trials > 1:
         rmse_plot_alg = [v for v in algorithms]
         algorithm_rmse = collect_rmse_per_dataset(config_multierror_list,
                                                   rmse_plot_alg)
+        res_writer.save_algorithm_rmse(algorithm_rmse, datasets, algorithms, n_trials, output_dir)
         print("--- Generate boxplot for RMSE ---")
         plot_rmse_per_dataset(algorithm_rmse, datasets, algorithms,
                               output_dir, plot_settings)

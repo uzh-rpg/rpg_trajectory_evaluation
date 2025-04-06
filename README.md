@@ -40,11 +40,11 @@ Zichao Zhang, Davide Scaramuzza: A Tutorial on Quantitative Trajectory Evaluatio
 6. [Credits](#credits)
 
 ## Install
-The package is written in python and tested in Ubuntu 16.04 and 18.04.
-Currently only `python2` is supported.
-The package can be used as a ROS package as well as a standalone tool.
-To use it as a ROS package, simply clone it into your workspace.
-It only depends on [`catkin_simple`](https://github.com/catkin/catkin_simple) to build.
+
+Install the package:
+```
+pip install -e .
+```
 
 **Dependencies**: You will need install the following:
 
@@ -100,22 +100,21 @@ Currently `eval_cfg.yaml` specifies two parameters for trajectory alignment (use
 
 **If this file does not exist, analysis be done for all the poses in `stamped_traj_estimate.txt`.**
 
-
 ## Run the Evaluation
 We can run the evaluation on a single estimate result or for multiple algorithms and datasets.
 
 ### Single trajectory estimate
 
-As a ROS package, run
+To evaluate a single trajectory estimate, run:
 
 ```
-rosrun rpg_trajectory_evaluation analyze_trajectory_single.py <result_folder>
+python3 scripts/analyze_trajectory_single.pyy <result_folder> 
 ```
 
-or as a standalone package, run
+or
 
 ```
-python2 analyze_trajectory_single.py <result_folder> 
+analyze_trajectory_single.pyy <result_folder> 
 ```
 
 `<result_folder>` should contain the groundtruth, trajectory estimate and optionally the evaluation configuration as mentioned above.
@@ -132,7 +131,7 @@ For multiple trials, the result for trial `n` will have the corresponding suffix
 
 As an example, after executing:
 ```
-python2 scripts/analyze_trajectory_single.py results/euroc_mono_stereo/laptop/vio_mono/laptop_vio_mono_MH_05
+python3 scripts/analyze_trajectory_single.py results/euroc_mono_stereo/laptop/vio_mono/laptop_vio_mono_MH_05
 ```
 you will find the following in `plots`:
 
@@ -155,16 +154,10 @@ The mapping from the `est_type` to file names (i.e., `stamped_*.txt`) is defined
 
 ### Multiple trajectory estimates
 
-Similar to the case of single trajectory evaluation, for ROS, run
+Similar to the case of single trajectory evaluation, run
 
 ```
-rosrun rpg_trajectory_evaluation analyze_trajectories.py \
-  euroc_vislam_mono.yaml --output_dir=./results/euroc_vislam_mono --results_dir=./results/euroc_vislam_mono --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
-```
-otherwise, run
-
-```
-python2 scripts/analyze_trajectories.py \
+python3 scripts/analyze_trajectories.py \
   euroc_vislam_mono.yaml --output_dir=./results/euroc_vislam_mono --results_dir=./results/euroc_vislam_mono --platform laptop --odometry_error_per_dataset --plot_trajectories --rmse_table --rmse_boxplot --mul_trials=10
 ```
 
