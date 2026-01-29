@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 @author: Christian Forster
 """
 
 import os
 import numpy as np
-import transformations as tf
+from . import transformations as tf
 
 
 def get_rigid_body_trafo(quat, trans):

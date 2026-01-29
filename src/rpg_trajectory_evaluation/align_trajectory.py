@@ -1,14 +1,14 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import transformations as tfs
+from . import transformations as tfs
 
 
 def get_best_yaw(C):
-    '''
+    """
     maximize trace(Rz(theta) * C)
-    '''
+    """
     assert C.shape == (3, 3)
 
     A = C[0, 1] - C[1, 0]
@@ -52,14 +52,14 @@ def align_umeyama(model, data, known_scale=False, yaw_only=False):
     n = np.shape(model)[0]
 
     # correlation
-    C = 1.0/n*np.dot(model_zerocentered.transpose(), data_zerocentered)
-    sigma2 = 1.0/n*np.multiply(data_zerocentered, data_zerocentered).sum()
+    C = 1.0 / n * np.dot(model_zerocentered.transpose(), data_zerocentered)
+    sigma2 = 1.0 / n * np.multiply(data_zerocentered, data_zerocentered).sum()
     U_svd, D_svd, V_svd = np.linalg.linalg.svd(C)
     D_svd = np.diag(D_svd)
     V_svd = np.transpose(V_svd)
 
     S = np.eye(3)
-    if(np.linalg.det(U_svd)*np.linalg.det(V_svd) < 0):
+    if np.linalg.det(U_svd) * np.linalg.det(V_svd) < 0:
         S[2, 2] = -1
 
     if yaw_only:
@@ -72,8 +72,8 @@ def align_umeyama(model, data, known_scale=False, yaw_only=False):
     if known_scale:
         s = 1
     else:
-        s = 1.0/sigma2*np.trace(np.dot(D_svd, S))
+        s = 1.0 / sigma2 * np.trace(np.dot(D_svd, S))
 
-    t = mu_M-s*np.dot(R, mu_D)
+    t = mu_M - s * np.dot(R, mu_D)
 
     return s, R, t

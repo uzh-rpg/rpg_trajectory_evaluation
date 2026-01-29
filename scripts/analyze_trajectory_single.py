@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import argparse
@@ -10,10 +10,10 @@ import matplotlib
 from colorama import init, Fore
 
 import add_path
-from trajectory import Trajectory
-import plot_utils as pu
+from rpg_trajectory_evaluation.trajectory import Trajectory
+import rpg_trajectory_evaluation.plot_utils as pu
 from fn_constants import kNsToEstFnMapping, kNsToMatchFnMapping, kFnExt
-from multiple_traj_errors import MulTrajError
+from rpg_trajectory_evaluation.multiple_traj_errors import MulTrajError
 
 init(autoreset=True)
 rc('font', **{'family': 'serif', 'serif': ['Cardo']})
@@ -145,7 +145,7 @@ if __name__ == '__main__':
               "We will plot trials {0}.".format(args.mul_plot_idx))
     else:
         args.mul_plot_idx = [0]
-    assert len(args.mul_plot_idx) is 1, "Multiple plots not supported yet"
+    assert len(args.mul_plot_idx) == 1, "Multiple plots not supported yet"
 
     for est_type_i, plot_dir_i in zip(args.est_types, plots_dirs):
         print(Fore.RED +

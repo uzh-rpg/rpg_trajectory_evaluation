@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import yaml
@@ -8,14 +8,14 @@ import pickle
 import numpy as np
 from colorama import init, Fore
 
-import trajectory_utils as traj_utils
-import trajectory_loading as traj_loading
-import results_writer as res_writer
-import compute_trajectory_errors as traj_err
-import align_utils as au
-from metrics import kRelMetrics, kRelMetricLables
+from . import trajectory_utils as traj_utils
+from . import trajectory_loading as traj_loading
+from . import results_writer as res_writer
+from . import compute_trajectory_errors as traj_err
+from . import align_utils as au
+from .metrics import kRelMetrics, kRelMetricLables
 
-import transformations as tf
+from . import transformations as tf
 
 
 class Trajectory:
@@ -168,7 +168,7 @@ class Trajectory:
 
     @staticmethod
     def get_suffix_str(suffix):
-        if suffix is not '':
+        if suffix != '':
             return "_#"+suffix
         else:
             return suffix

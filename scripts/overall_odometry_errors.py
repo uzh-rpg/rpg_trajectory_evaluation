@@ -1,12 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 import add_path
-import results_writer as res_writer
-import plot_utils as pu
+import rpg_trajectory_evaluation.results_writer as res_writer
+import rpg_trajectory_evaluation.plot_utils as pu
 
 from analyze_trajectories import FORMAT, PLOT_LABELS, COLORS
 

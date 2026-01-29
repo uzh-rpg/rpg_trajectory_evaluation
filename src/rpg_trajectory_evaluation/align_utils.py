@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import numpy as np
 
-import transformations as tfs
-import align_trajectory as align
+from . import transformations as tfs
+from . import align_trajectory as align
 
 
 def _getIndices(n_aligned, total_n):

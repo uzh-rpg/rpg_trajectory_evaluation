@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 kNsToEstFnMapping = {'traj_est': 'stamped_traj_estimate',
                      'pose_graph': 'stamped_pose_graph_estimate',

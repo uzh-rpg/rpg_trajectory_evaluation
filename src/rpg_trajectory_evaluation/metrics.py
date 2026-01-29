@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 kRelMetrics = ['rel_trans', 'rel_trans_perc', 'rel_yaw',
                'rel_rot', 'rel_gravity', 'rel_rot_deg_per_m']
